@@ -10,12 +10,13 @@ export default function RegisterPage() {
     const [error, formAction, isPending] = useActionState(async (prevState: any, formData: FormData) => {
         try {
             const res = await register(formData);
+            if (res?.error) return res.error;
             if (res?.success) {
                 window.location.href = '/';
             }
             return null;
         } catch (err: any) {
-            return err.message;
+            return "Ocurrió un error inesperado al conectar.";
         }
     }, null);
 
