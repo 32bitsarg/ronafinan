@@ -3,6 +3,7 @@ import { PieChart as PieChartIcon, TrendingDown, Target, HelpCircle, LineChart }
 import { getDashboardData } from '@/actions/transaction';
 import { getForecastData } from '@/actions/forecasting';
 import ForecastChart from '@/components/ForecastChart';
+import { formatMoney } from '@/lib/formatters';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,8 +28,7 @@ export default async function EstadisticasPage() {
         }
     });
 
-    const formatMoney = (val: number) =>
-        new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(val);
+
 
     return (
         <div className={styles.container}>

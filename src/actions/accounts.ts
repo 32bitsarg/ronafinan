@@ -12,7 +12,8 @@ export async function createAccount(prevState: any, formData: FormData) {
         const name = formData.get('name') as string;
         const type = formData.get('type') as string;
         const currency = formData.get('currency') as string;
-        const balance = parseFloat(formData.get('balance') as string) || 0;
+        const balanceInputStr = formData.get('balance') as string;
+        const balance = balanceInputStr ? parseFloat(balanceInputStr.replace(',', '.')) : 0;
 
         if (!name || !type || !currency) throw new Error("Faltan datos de la cuenta.");
 
@@ -47,8 +48,8 @@ export async function editAccount(prevState: any, formData: FormData) {
 
         const accountId = formData.get('accountId') as string;
         const name = formData.get('name') as string;
-        const balanceInput = formData.get('balance');
-        const balance = balanceInput ? parseFloat(balanceInput as string) : null;
+        const balanceInput = formData.get('balance') as string;
+        const balance = balanceInput ? parseFloat(balanceInput.replace(',', '.')) : null;
 
         if (!accountId || !name) throw new Error("Faltan datos de la cuenta.");
 

@@ -6,6 +6,7 @@ import { getDashboardData } from "@/actions/transaction";
 import { getAvailableWorkspaces, getSession } from "@/actions/auth";
 import WorkspaceSwitcher from "@/components/WorkspaceSwitcher";
 import Link from 'next/link';
+import { formatMoney } from '@/lib/formatters';
 
 export const dynamic = 'force-dynamic';
 
@@ -85,7 +86,7 @@ export default async function Home() {
                   <div className={styles.accountCardInfo}>
                     <p className={styles.accountName}>{acc.name}</p>
                     <p className={styles.accountBalance}>
-                      {acc.currency === 'USD' ? 'U$D' : '$'} {acc.balance.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                      {formatMoney(acc.balance, acc.currency)}
                     </p>
                   </div>
                 </div>

@@ -1,6 +1,7 @@
 import { getRecurringTransactions, toggleRecurringTransaction, deleteRecurringTransaction } from '@/actions/recurring';
 import { RecurringTransactionForm } from '../../mobile/fijos/ClientComponents';
 import { Calendar, PlayCircle, PauseCircle, Trash2, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { formatMoney } from '@/lib/formatters';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,10 +11,7 @@ export default async function FijosDesktop() {
     const activeTotalExpensesArs = events.filter(e => e.isActive && e.type === 'EXPENSE' && e.currency === 'ARS').reduce((sum, e) => sum + e.amount, 0);
     const activeTotalIncomesArs = events.filter(e => e.isActive && e.type === 'INCOME' && e.currency === 'ARS').reduce((sum, e) => sum + e.amount, 0);
 
-    const formatMoney = (val: number, currency = 'ARS') =>
-        currency === 'USD'
-            ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(val)
-            : new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(val);
+
 
     return (
         <div>

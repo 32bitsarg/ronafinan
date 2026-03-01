@@ -2,6 +2,7 @@
 
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import TransactionItemActions from './TransactionItemActions';
+import { formatMoney } from '@/lib/formatters';
 
 export default function DesktopTransactionList({ transactions }: { transactions: any[] }) {
     if (!transactions || transactions.length === 0) {
@@ -12,12 +13,6 @@ export default function DesktopTransactionList({ transactions }: { transactions:
         );
     }
 
-    const formatMoney = (val: number, currency: string = 'ARS') => {
-        if (currency === 'USD') {
-            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(val);
-        }
-        return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(val);
-    };
 
     return (
         <div style={{ overflowX: 'auto' }}>

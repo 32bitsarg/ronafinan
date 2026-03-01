@@ -2,6 +2,7 @@ import styles from '../fijos/page.module.css'; // Reusing matching layout system
 import { getBudgets, getMonthlyIncomeProjection } from '@/actions/budget';
 import { BudgetForm, DeleteBudgetButton } from './ClientComponents';
 import { PieChart, ListChecks } from 'lucide-react';
+import { formatMoney } from '@/lib/formatters';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,8 +20,7 @@ export default async function PresupuestoPage() {
     // EL NUMERO CLAVE: Dinero sin asignar. El juego es llevar esto a 0.
     const leftToBudget = projectedIncome - totalBudgeted;
 
-    const formatMoney = (val: number) =>
-        new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(val);
+
 
     return (
         <div className={styles.container}>

@@ -106,7 +106,7 @@ export function AccountManager({ accounts }: { accounts: any[] }) {
                         </select>
                     </div>
 
-                    <input type="number" step="0.01" name="balance" placeholder="Saldo Inicial (Opcional)" style={{ padding: '0.8rem', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'var(--bg-main)', color: 'white' }} />
+                    <input type="number" step="any" name="balance" placeholder="Saldo Inicial (Opcional)" style={{ padding: '0.8rem', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'var(--bg-main)', color: 'white' }} />
 
                     <button disabled={isPending} type="submit" style={{ padding: '0.8rem', borderRadius: '6px', border: 'none', background: 'var(--accent-primary)', color: 'white', fontWeight: 'bold', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
                         {isPending ? 'Creando...' : <><CreditCard size={18} /> Agregar Cuenta</>}
@@ -130,7 +130,7 @@ export function AccountManager({ accounts }: { accounts: any[] }) {
                                         <button type="button" onClick={() => setEditingId(null)} style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer' }}><X size={18} /></button>
                                     </div>
                                     <input type="text" name="name" defaultValue={acc.name} placeholder="Nuevo Nombre" required style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'var(--bg-main)', color: 'white' }} />
-                                    <input type="number" step="0.01" name="balance" defaultValue={acc.balance < 0 ? acc.balance * -1 : acc.balance} placeholder="Nuevo Saldo (Sin -)" required style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'var(--bg-main)', color: 'white' }} />
+                                    <input type="number" step="any" name="balance" defaultValue={acc.balance < 0 ? acc.balance * -1 : acc.balance} placeholder="Nuevo Saldo (Sin -)" required style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'var(--bg-main)', color: 'white' }} />
                                     <button disabled={isEditing} type="submit" style={{ padding: '0.6rem', borderRadius: '6px', border: 'none', background: 'var(--success)', color: 'white', fontWeight: 'bold', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
                                         {isEditing ? 'Guardando...' : <><Save size={16} /> Guardar Cambios</>}
                                     </button>

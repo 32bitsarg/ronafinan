@@ -2,6 +2,7 @@ import { getInvestments } from '@/actions/investment';
 import { InvestmentForm, DeleteInvestmentButton } from '../../mobile/inversiones/ClientComponents';
 import { LineChart, Building, AlertCircle } from 'lucide-react';
 import { getDolarBlueRate } from '@/lib/dolar';
+import { formatMoney } from '@/lib/formatters';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,10 +22,7 @@ export default async function InversionesDesktop() {
         return sum + val;
     }, 0);
 
-    const formatMoney = (val: number, reqCurrency = 'ARS') =>
-        reqCurrency === 'USD'
-            ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(val)
-            : new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(val);
+
 
     const globalYieldPerc = totalInvestedInArs > 0 ? ((totalCurrentValInArs - totalInvestedInArs) / totalInvestedInArs) * 100 : 0;
     const isGlobalPositive = globalYieldPerc >= 0;

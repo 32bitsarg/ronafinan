@@ -5,6 +5,7 @@ import WorkspaceSwitcher from "@/components/WorkspaceSwitcher";
 import { Wallet, Building, CreditCard, ArrowUpRight, ArrowDownLeft, HandCoins, PieChart, TrendingDown, Target, LineChart } from "lucide-react";
 import DesktopTransactionList from "@/components/DesktopTransactionList";
 import ForecastChart from "@/components/ForecastChart";
+import { formatMoney } from '@/lib/formatters';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,12 +41,7 @@ export default async function DesktopHome() {
         }
     });
 
-    const formatMoney = (val: number, currency: string = 'ARS') => {
-        if (currency === 'USD') {
-            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(val);
-        }
-        return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(val);
-    };
+
 
     return (
         <div>

@@ -21,6 +21,10 @@
   --accent-red: #EF4444;
   /* Rojo limpio para gastos/alertas */
 
+  --success: var(--accent-green);
+  --error: var(--accent-red);
+  --error-muted: rgba(239, 68, 68, 0.1);
+
   --text-primary: #111827;
   /* Casi negro intenso para legibilidad perfecta */
   --text-secondary: #6B7280;

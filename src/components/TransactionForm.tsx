@@ -62,7 +62,7 @@ export default function TransactionForm({ accounts }: Props) {
                             name="amount"
                             id="amount"
                             type="number"
-                            step="0.01"
+                            step="any"
                             placeholder="Ej. 1500"
                             className={styles.input}
                             required

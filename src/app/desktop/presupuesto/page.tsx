@@ -1,6 +1,7 @@
 import { getBudgets, getMonthlyIncomeProjection } from '@/actions/budget';
 import { BudgetForm, DeleteBudgetButton } from '../../mobile/presupuesto/ClientComponents';
 import { PieChart, ListChecks } from 'lucide-react';
+import { formatMoney } from '@/lib/formatters';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,8 +16,7 @@ export default async function PresupuestoDesktop() {
     const totalBudgeted = budgets.reduce((sum, b) => sum + b.limit, 0);
     const leftToBudget = projectedIncome - totalBudgeted;
 
-    const formatMoney = (val: number) =>
-        new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(val);
+
 
     return (
         <div>

@@ -3,6 +3,7 @@ import styles from './TransactionList.module.css';
 import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft, LineChart } from 'lucide-react';
 import TransactionItemActions from './TransactionItemActions';
 import Link from 'next/link';
+import { formatMoney } from '@/lib/formatters';
 
 export default async function TransactionList() {
     const data = await getDashboardData();
@@ -25,12 +26,6 @@ export default async function TransactionList() {
         }
     });
 
-    const formatMoney = (val: number, currency: string = 'ARS') => {
-        if (currency === 'USD') {
-            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(val);
-        }
-        return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(val);
-    };
 
     return (
         <div className={styles.container}>

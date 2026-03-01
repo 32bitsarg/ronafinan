@@ -20,7 +20,7 @@ export async function addTransaction(formData: FormData) {
     const wsId = user.activeWorkspaceId!;
 
     const amountStr = formData.get('amount') as string;
-    const amount = parseFloat(amountStr);
+    const amount = amountStr ? parseFloat(amountStr.replace(',', '.')) : 0;
     const type = formData.get('type') as string;
     const category = formData.get('category') as string;
     const description = formData.get('description') as string;
