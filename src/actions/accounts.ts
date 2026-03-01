@@ -39,3 +39,45 @@ export async function createAccount(prevState: any, formData: FormData) {
         return { error: e.message };
     }
 }
+
+export async function editAccount(prevState: any, formData: FormData) {
+    try {
+        const user = await getSession();
+        if (!user.activeWorkspaceId) throw new Error("No hay un workspace activo.");
+
+        const accountId = formData.get('accountId') as string;
+        const name = formData.get('name') as string;
+        const balanceInput = formData.get('balance');
+        const balance = balanceInput ? parseFloat(balanceInput as string) : null;
+
+        if (!accountId || !name) throw new Error("Faltan datos de la cuenta.");
+
+        const account = await prisma.account.findFirst({
+            where: { id: accountId, workspaceId: user.activeWorkspaceId }
+        });
+
+        if (!account) throw new Error("Cuenta no encontrada o sin permisos.");
+
+        let finalBalance = balance !== null ? balance : account.balance;
+
+        // Mantener lógica de deuda si aplica, y si el usuario mandó un balance nuevo
+        if (balance !== null && ['DEBT', 'CREDIT_CARD'].includes(account.type) && balance > 0) {
+            finalBalance = balance * -1;
+        }
+
+        await prisma.account.update({
+            where: { id: account.id },
+            data: {
+                name,
+                balance: finalBalance
+            }
+        });
+
+        revalidatePath('/');
+        revalidatePath('/mobile');
+        revalidatePath('/desktop');
+        return { success: true };
+    } catch (e: any) {
+        return { error: e.message };
+    }
+}

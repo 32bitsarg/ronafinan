@@ -2,9 +2,9 @@
 
 import { useActionState, useState } from 'react';
 import { createWorkspace, joinWorkspace } from '@/actions/workspaces';
-import { createAccount } from '@/actions/accounts';
+import { createAccount, editAccount } from '@/actions/accounts';
 import { logout } from '@/actions/auth';
-import { LogOut, Users, PlusCircle, CreditCard, Copy } from 'lucide-react';
+import { LogOut, Users, PlusCircle, CreditCard, Copy, Pencil, Save, X } from 'lucide-react';
 import styles from './page.module.css';
 
 // ==========================================
@@ -79,8 +79,10 @@ export function WorkspaceManager({ activeInviteCode }: { activeInviteCode: strin
 // ==========================================
 // 3. CREACIÓN DE CUENTAS (BANCOS/BILLETERAS)
 // ==========================================
-export function AccountManager() {
+export function AccountManager({ accounts }: { accounts: any[] }) {
     const [state, action, isPending] = useActionState(createAccount, null);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editState, editAction, isEditing] = useActionState(editAccount, null);
 
     return (
         <div className={styles.settingsGroup} style={{ gap: '1rem' }}>
@@ -113,6 +115,41 @@ export function AccountManager() {
                 {state?.error && <p style={{ color: 'var(--error)', fontSize: '0.8rem' }}>{state.error}</p>}
                 {state?.success && <p style={{ color: 'var(--success)', fontSize: '0.8rem' }}>{state.message}</p>}
             </div>
+
+            {/* List and Editor */}
+            {accounts?.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '1rem' }}>
+                    <h4 style={{ fontSize: '1rem', margin: 0, color: 'var(--text-secondary)' }}>Tus Cuentas Activas</h4>
+                    {accounts.map(acc => (
+                        <div key={acc.id} style={{ backgroundColor: 'var(--bg-surface)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
+                            {editingId === acc.id ? (
+                                <form action={(formData) => { editAction(formData); setEditingId(null); }} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                                    <input type="hidden" name="accountId" value={acc.id} />
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <p style={{ margin: 0, fontWeight: 'bold' }}>Editando: {acc.type}</p>
+                                        <button type="button" onClick={() => setEditingId(null)} style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer' }}><X size={18} /></button>
+                                    </div>
+                                    <input type="text" name="name" defaultValue={acc.name} placeholder="Nuevo Nombre" required style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'var(--bg-main)', color: 'white' }} />
+                                    <input type="number" step="0.01" name="balance" defaultValue={acc.balance < 0 ? acc.balance * -1 : acc.balance} placeholder="Nuevo Saldo (Sin -)" required style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'var(--bg-main)', color: 'white' }} />
+                                    <button disabled={isEditing} type="submit" style={{ padding: '0.6rem', borderRadius: '6px', border: 'none', background: 'var(--success)', color: 'white', fontWeight: 'bold', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
+                                        {isEditing ? 'Guardando...' : <><Save size={16} /> Guardar Cambios</>}
+                                    </button>
+                                </form>
+                            ) : (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div>
+                                        <p style={{ margin: 0, fontWeight: 'bold', fontSize: '1rem' }}>{acc.name}</p>
+                                        <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Saldo: {acc.currency === 'USD' ? 'u$d' : '$'}{acc.balance}</p>
+                                    </div>
+                                    <button onClick={() => setEditingId(acc.id)} style={{ background: 'var(--bg-main)', border: '1px solid var(--border-subtle)', padding: '0.5rem', borderRadius: '6px', color: 'var(--text-primary)', cursor: 'pointer' }}>
+                                        <Pencil size={16} />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

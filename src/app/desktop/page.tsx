@@ -1,8 +1,10 @@
 import { getSession, getAvailableWorkspaces } from "@/actions/auth";
 import { getDashboardData } from "@/actions/transaction";
+import { getForecastData } from "@/actions/forecasting";
 import WorkspaceSwitcher from "@/components/WorkspaceSwitcher";
-import { Wallet, Building, CreditCard, ArrowUpRight, ArrowDownLeft, HandCoins } from "lucide-react";
+import { Wallet, Building, CreditCard, ArrowUpRight, ArrowDownLeft, HandCoins, PieChart, TrendingDown, Target, LineChart } from "lucide-react";
 import DesktopTransactionList from "@/components/DesktopTransactionList";
+import ForecastChart from "@/components/ForecastChart";
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +13,7 @@ export default async function DesktopHome() {
     const workspaces = await getAvailableWorkspaces();
     const data = await getDashboardData();
     const { accounts, totalBalanceArs, totalBalanceUsd, transactions } = data;
+    const forecastData = await getForecastData();
 
     const renderAccountIcon = (type: string) => {
         switch (type) {
@@ -23,6 +26,8 @@ export default async function DesktopHome() {
     };
 
     let totalIncomeArs = 0, totalExpenseArs = 0, totalIncomeUsd = 0, totalExpenseUsd = 0;
+    const expensesByCategory: Record<string, number> = {};
+
     transactions.forEach((t: any) => {
         if (t.type === 'INCOME') {
             if (t.currency === 'USD') totalIncomeUsd += t.amount;
@@ -31,6 +36,7 @@ export default async function DesktopHome() {
         if (t.type === 'EXPENSE') {
             if (t.currency === 'USD') totalExpenseUsd += t.amount;
             else totalExpenseArs += t.amount;
+            expensesByCategory[t.category] = (expensesByCategory[t.category] || 0) + t.amount;
         }
     });
 
@@ -119,6 +125,80 @@ export default async function DesktopHome() {
                         </div>
                     </div>
 
+                </div>
+            </div>
+
+            {/* Segunda Fila de Grid (Estadísticas y Forecast) */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem', marginTop: '1.5rem' }}>
+                <div style={{ gridColumn: 'span 8', backgroundColor: 'var(--bg-surface)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                        <h3 style={{ fontSize: '1.1rem', margin: 0, fontWeight: '600' }}>Flujo de Caja Proyectado</h3>
+                        <LineChart size={20} color="var(--text-secondary)" />
+                    </div>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>Estimación combinando presupuestos y suscripciones activas.</p>
+                    <ForecastChart data={forecastData} />
+                </div>
+
+                <div style={{ gridColumn: 'span 4', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div style={{ backgroundColor: 'var(--bg-surface)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                            <h3 style={{ fontSize: '1.1rem', margin: 0, fontWeight: '600' }}>Resumen de Gastos</h3>
+                            <PieChart size={20} color="var(--text-secondary)" />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {Object.keys(expensesByCategory).length === 0 ? (
+                                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>No hay gastos para analizar.</p>
+                            ) : (
+                                Object.entries(expensesByCategory).sort(([, a], [, b]) => b - a).map(([cat, amount], idx) => {
+                                    const percentage = totalExpenseArs > 0 ? (amount / totalExpenseArs) * 100 : 0;
+                                    const colors = ['#0F172A', '#334155', '#475569', '#64748B'];
+                                    const bgColor = colors[idx % colors.length];
+                                    return (
+                                        <div key={cat}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
+                                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '500' }}>
+                                                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: bgColor }} />
+                                                    {cat}
+                                                </span>
+                                                <span style={{ fontWeight: '600' }}>{formatMoney(amount)}</span>
+                                            </div>
+                                            <div style={{ width: '100%', height: '6px', backgroundColor: 'var(--bg-main)', borderRadius: '99px', overflow: 'hidden' }}>
+                                                <div style={{ width: `${percentage}%`, height: '100%', backgroundColor: bgColor }} />
+                                            </div>
+                                        </div>
+                                    )
+                                })
+                            )}
+                        </div>
+                    </div>
+
+                    <div style={{ backgroundColor: 'var(--bg-surface)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1rem' }}>
+                            <div style={{ backgroundColor: 'var(--bg-main)', padding: '0.5rem', borderRadius: '8px' }}>
+                                <Target size={18} color="var(--accent-primary)" />
+                            </div>
+                            <div>
+                                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>Tasa de Ahorro</p>
+                                <p style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0 }}>
+                                    {totalIncomeArs > 0 ? `${Math.max(0, Math.round(((totalIncomeArs - totalExpenseArs) / totalIncomeArs) * 100))}%` : '0%'}
+                                </p>
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                            <div style={{ backgroundColor: 'var(--bg-main)', padding: '0.5rem', borderRadius: '8px' }}>
+                                <TrendingDown size={18} color="var(--error)" />
+                            </div>
+                            <div>
+                                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>Mayor Gasto</p>
+                                <p style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0 }}>
+                                    {Object.keys(expensesByCategory).length > 0
+                                        ? Object.keys(expensesByCategory).reduce((a, b) => expensesByCategory[a] > expensesByCategory[b] ? a : b)
+                                        : 'N/A'
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
