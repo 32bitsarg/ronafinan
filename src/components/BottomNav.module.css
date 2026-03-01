@@ -1,0 +1,79 @@
+.nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    /* Centrar menú */
+    max-width: 600px;
+    /* Igual que el contenedor principal */
+    background-color: var(--bg-main);
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: space-around;
+    padding: 0.5rem 0;
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+    /* Soporte para iPhone notch/home bar */
+    box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.02);
+    z-index: 50;
+}
+
+.navItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    flex: 1;
+    padding: 0.5rem;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.navItem:hover {
+    background-color: var(--bg-surface-elevated);
+}
+
+.navItem.active {
+    color: var(--accent-primary);
+}
+
+.navItem.active svg {
+    stroke-width: 2.5;
+}
+
+/* Botón central FAB (Floating Action Button) */
+.mainActionButton {
+    position: relative;
+    top: -20px;
+    /* Lo subimos para que resalte y rompa la barra */
+    display: flex;
+    justify-content: center;
+    flex: 0.8;
+    /* Que ocupe un poco menos de espacio base que los demás */
+}
+
+.mainActionInner {
+    width: 56px;
+    height: 56px;
+    background-color: var(--accent-primary);
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.3);
+    border: 4px solid var(--bg-main);
+    transition: transform var(--transition-fast);
+}
+
+.mainActionButton:hover .mainActionInner {
+    transform: translateY(-2px);
+    background-color: var(--accent-primary-hover);
+}
+
+.mainActionButton:active .mainActionInner {
+    transform: translateY(2px);
+}

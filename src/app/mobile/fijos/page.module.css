@@ -1,0 +1,234 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: 600px;
+    margin: 0 auto;
+    background-color: var(--bg-main);
+    padding: 1.5rem;
+    padding-bottom: 6rem;
+    /* Support for bottom nav */
+}
+
+.header {
+    margin-bottom: 2rem;
+}
+
+.title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+}
+
+.subtitle {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.mainContent {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* ================================
+   Hero Summary
+   ================================ */
+.summaryCard {
+    background-color: var(--accent-primary);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    color: #fff;
+    box-shadow: var(--shadow-md);
+    text-align: center;
+}
+
+.summaryLabel {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    margin-bottom: 4px;
+}
+
+.summaryAmount {
+    font-size: 2.5rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+}
+
+.summaryHelper {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+
+/* ================================
+   Timeline List
+   ================================ */
+.sectionTitle {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: relative;
+}
+
+/* Línea conectora de calendario */
+.timeline::before {
+    content: "";
+    position: absolute;
+    top: 10px;
+    bottom: 10px;
+    left: 28px;
+    width: 2px;
+    background-color: var(--border-subtle);
+    z-index: 0;
+}
+
+.timelineItem {
+    display: flex;
+    align-items: center;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    gap: 1rem;
+    position: relative;
+    z-index: 1;
+    transition: all var(--transition-fast);
+}
+
+.inactiveItem {
+    opacity: 0.6;
+    filter: grayscale(1);
+}
+
+.dayCol {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    height: 48px;
+    background-color: var(--bg-main);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    /* Sombra para que flote sobre la línea ::before */
+    box-shadow: 0 0 0 4px var(--bg-main);
+}
+
+.dayNumber {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+    line-height: 1;
+}
+
+.dayLabel {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+.infoCol {
+    flex: 1;
+}
+
+.expenseName {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.expenseCategory {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+.actionCol {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+.expenseAmount {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--accent-red);
+}
+
+.buttonGroup {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.iconBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color var(--transition-fast);
+}
+
+.iconBtn:hover {
+    background-color: var(--bg-surface-elevated);
+}
+
+.iconPause {
+    color: var(--text-secondary);
+}
+
+.iconPlay {
+    color: var(--accent-green);
+}
+
+.iconTrash {
+    color: var(--accent-red);
+    opacity: 0.7;
+}
+
+.iconTrash:hover {
+    opacity: 1;
+}
+
+.emptyState {
+    background-color: var(--bg-surface);
+    padding: 3rem 2rem;
+    border-radius: var(--radius-lg);
+    text-align: center;
+    color: var(--text-secondary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.emptyIcon {
+    margin-bottom: 1rem;
+    opacity: 0.5;
+    color: var(--text-secondary);
+}
+
+.emptyState p {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}

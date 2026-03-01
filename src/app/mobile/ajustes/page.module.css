@@ -1,0 +1,208 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: 600px;
+    margin: 0 auto;
+    background-color: var(--bg-main);
+    padding: 1.5rem;
+    padding-bottom: 6rem;
+    /* Soporte para menú del bottom nav */
+}
+
+.header {
+    margin-bottom: 2rem;
+}
+
+.title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+}
+
+.mainContent {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* ====================================
+   Perfil
+   ==================================== */
+.profileSection {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+}
+
+.avatarLarge {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-full);
+    background-color: var(--bg-surface-elevated);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-primary);
+}
+
+.profileName {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.profileEmail {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.editBtn {
+    margin-left: auto;
+    background-color: var(--bg-main);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-full);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.editBtn:hover {
+    background-color: var(--bg-surface-elevated);
+}
+
+/* ====================================
+   Grupos de Configuración
+   ==================================== */
+.settingsGroup {
+    display: flex;
+    flex-direction: column;
+}
+
+.groupTitle {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+    padding-left: 0.5rem;
+}
+
+.settingItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 1rem;
+    background-color: var(--bg-surface);
+    border: none;
+    border-bottom: 1px solid var(--border-subtle);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+
+.settingItem:first-of-type {
+    border-top-left-radius: var(--radius-md);
+    border-top-right-radius: var(--radius-md);
+}
+
+.settingItem:last-of-type {
+    border-bottom: none;
+    border-bottom-left-radius: var(--radius-md);
+    border-bottom-right-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    /* Cerrar la caja */
+    border-top: none;
+}
+
+/* Truco sucio CSS para cuando solo hay uno o es el primero */
+.settingItem {
+    border: 1px solid var(--border-subtle);
+    border-bottom: none;
+}
+
+.settingItem:last-of-type {
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.settingItem:hover {
+    background-color: var(--bg-surface-elevated);
+}
+
+.settingLeft {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.iconWrap {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-main);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.iconSecondary {
+    color: var(--text-secondary);
+}
+
+.settingRight {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.settingValue {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.chevron {
+    color: var(--text-secondary);
+    opacity: 0.5;
+}
+
+/* ====================================
+   Danger Zone
+   ==================================== */
+.dangerZone {
+    margin-top: 1rem;
+}
+
+.logoutBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 1.25rem;
+    background-color: var(--accent-red-ghost);
+    color: var(--accent-red);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.logoutBtn:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+    /* Efecto opacidad */
+}

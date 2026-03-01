@@ -1,0 +1,175 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================================
+// MÓDULOS DE AUTENTICACIÓN Y MULTITENANT (RBAC)
+// ==========================================
+
+model User {
+  id                String   @id @default(uuid())
+  email             String   @unique
+  name              String
+  password          String   // MVP: En un futuro usar NextAuth
+  
+  // Relación con Workspaces (Espacios Múltiples)
+  workspaces        WorkspaceMember[]
+  activeWorkspaceId String?  // Guarda el ID del último entorno que vio para facilitarle la vida al entrar
+
+  createdAt         DateTime @default(now())
+}
+
+model Workspace {
+  id         String @id @default(uuid())
+  name       String // Ej: "Chino Personal", "Hogar Familia"
+  inviteCode String? @unique
+
+  // Miembros que tienen acceso a esta casa
+  members       WorkspaceMember[]
+
+  // Todos los datos ahora pertenecen a ESTE espacio para aislar la info
+  accounts      Account[]
+  transactions  Transaction[]
+  investments   Investment[]
+  recurringTransactions RecurringTransaction[]
+  budgets       Budget[]
+
+  createdAt     DateTime @default(now())
+}
+
+model WorkspaceMember {
+  id          String @id @default(uuid())
+  userId      String
+  workspaceId String
+  role        String @default("MEMBER") // ADMIN o MEMBER
+  
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+}
+
+// ==========================================
+// MODELOS FINANCIEROS (Actualizados para Workspaces)
+// ==========================================
+
+// 0. Modelo de Cuentas
+model Account {
+  id          String   @id @default(uuid())
+  name        String   
+  type        String   
+  balance     Float    @default(0.0) 
+  currency    String   @default("ARS") 
+  
+  // Relación Multi-Tenant
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  
+  transactionsFrom Transaction[] @relation("FromAccount")
+  transactionsTo   Transaction[] @relation("ToAccount")
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 1. Modelo para los Gastos e Ingresos
+model Transaction {
+  id          String   @id @default(uuid())
+  amount      Float
+  currency    String   @default("ARS") 
+  type        String   
+  category    String   
+  description String?  
+  date        DateTime @default(now())
+  
+  // Relación Multi-Tenant
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  accountId   String?  
+  account     Account? @relation("FromAccount", fields: [accountId], references: [id])
+  
+  toAccountId String?  
+  toAccount   Account? @relation("ToAccount", fields: [toAccountId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 2. Modelo para tu Portafolio de Inversiones
+model Investment {
+  id          String   @id @default(uuid())
+  name        String   
+  invested    Float    
+  currentVal  Float?   
+  currency    String   @default("USD") 
+  platform    String   
+  
+  // Relación Multi-Tenant
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 3. Modelo para los Tips y Métodos Financieros (Globales, no dependen de Workspace)
+model Tip {
+  id          String   @id @default(uuid())
+  title       String   
+  content     String   
+  category    String   
+  
+  createdAt   DateTime @default(now())
+}
+
+// 4. Modelo para Transacciones Recurrentes (Ingresos Fijos, Suscripciones, Alquiler)
+model RecurringTransaction {
+  id            String   @id @default(uuid())
+  name          String   
+  amount        Float
+  currency      String   @default("ARS") 
+  type          String   @default("EXPENSE") // "EXPENSE" o "INCOME"
+  category      String   
+  frequency     String   @default("MONTHLY") // "DAILY", "WEEKLY", "MONTHLY"
+  dayOfMonth    Int?     // Opcional, dependiendo de la frecuencia
+  isActive      Boolean  @default(true) 
+  lastProcessed DateTime?
+
+  // Lógica de Cuotas (Para Tarjetas de Crédito y Préstamos)
+  totalInstallments  Int?
+  currentInstallment Int?    @default(1)
+  
+  // Relación Multi-Tenant
+  workspaceId   String?
+  workspace     Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// 5. Modelo para Presupuestos Base Cero (Zero-Based Budgeting)
+model Budget {
+  id          String   @id @default(uuid())
+  category    String   
+  limit       Float    
+  month       Int      
+  year        Int      
+  
+  // Relación Multi-Tenant
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([category, month, year, workspaceId]) // Evitar conflictos entre presupuestos de distintas familias
+}
