@@ -1,7 +1,7 @@
 import { getSession, getAvailableWorkspaces } from "@/actions/auth";
 import { getDashboardData } from "@/actions/transaction";
 import WorkspaceSwitcher from "@/components/WorkspaceSwitcher";
-import { Wallet, Building, CreditCard, ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { Wallet, Building, CreditCard, ArrowUpRight, ArrowDownLeft, HandCoins } from "lucide-react";
 import DesktopTransactionList from "@/components/DesktopTransactionList";
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +16,9 @@ export default async function DesktopHome() {
         switch (type) {
             case 'CASH': return <Wallet size={20} />;
             case 'BANK': return <Building size={20} />;
-            default: return <CreditCard size={20} />;
+            case 'CREDIT_CARD': return <CreditCard size={20} color="var(--accent-primary)" />;
+            case 'DEBT': return <HandCoins size={20} color="var(--error)" />;
+            default: return <Wallet size={20} />;
         }
     };
 

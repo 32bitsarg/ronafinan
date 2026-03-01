@@ -95,6 +95,8 @@ export function AccountManager() {
                             <option value="BANK">Banco</option>
                             <option value="E-WALLET">Billetera Virtual</option>
                             <option value="CASH">Efectivo</option>
+                            <option value="CREDIT_CARD">Tarjeta de Crédito</option>
+                            <option value="DEBT">Préstamo / Deuda</option>
                         </select>
                         <select name="currency" required style={{ width: '80px', padding: '0.8rem', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'var(--bg-main)', color: 'white' }}>
                             <option value="ARS">ARS</option>

@@ -16,12 +16,18 @@ export async function createAccount(prevState: any, formData: FormData) {
 
         if (!name || !type || !currency) throw new Error("Faltan datos de la cuenta.");
 
+        // Si es una deuda, la forzamos a nacer en negativo lógicamente
+        let finalBalance = balance;
+        if (['DEBT', 'CREDIT_CARD'].includes(type) && balance > 0) {
+            finalBalance = balance * -1;
+        }
+
         await prisma.account.create({
             data: {
                 name,
                 type,
                 currency,
-                balance,
+                balance: finalBalance,
                 workspaceId: user.activeWorkspaceId
             }
         });

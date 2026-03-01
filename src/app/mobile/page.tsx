@@ -1,6 +1,6 @@
 import styles from "./page.module.css";
 import TransactionList from "@/components/TransactionList";
-import { User, Bell, Wallet, Building, CreditCard } from "lucide-react";
+import { User, Bell, Wallet, Building, CreditCard, HandCoins } from "lucide-react";
 import { processDueRecurringTransactions } from "@/actions/engine";
 import { getDashboardData } from "@/actions/transaction";
 import { getAvailableWorkspaces, getSession } from "@/actions/auth";
@@ -21,7 +21,9 @@ export default async function Home() {
     switch (type) {
       case 'CASH': return <Wallet size={20} />;
       case 'BANK': return <Building size={20} />;
-      default: return <CreditCard size={20} />;
+      case 'CREDIT_CARD': return <CreditCard size={20} color="var(--accent-primary)" />;
+      case 'DEBT': return <HandCoins size={20} color="var(--error)" />;
+      default: return <Wallet size={20} />;
     }
   };
 
