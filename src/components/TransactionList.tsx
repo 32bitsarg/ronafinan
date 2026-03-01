@@ -1,7 +1,8 @@
 import { getDashboardData } from '@/actions/transaction';
 import styles from './TransactionList.module.css';
-import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft, LineChart } from 'lucide-react';
+import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft, LineChart, Paperclip } from 'lucide-react';
 import TransactionItemActions from './TransactionItemActions';
+import ReceiptViewer from './ReceiptViewer';
 import Link from 'next/link';
 import { formatMoney } from '@/lib/formatters';
 
@@ -129,6 +130,7 @@ export default async function TransactionList() {
                                             <p className={styles.itemDate}>
                                                 {t.description ? `${t.description} • ` : ''}
                                                 {dateObj.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' })}
+                                                {t.receiptUrl && <ReceiptViewer url={t.receiptUrl} transactionId={t.id} />}
                                             </p>
                                         </div>
                                     </div>

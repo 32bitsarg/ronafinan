@@ -1,7 +1,8 @@
 'use client';
 
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, Paperclip } from 'lucide-react';
 import TransactionItemActions from './TransactionItemActions';
+import ReceiptViewer from './ReceiptViewer';
 import { formatMoney } from '@/lib/formatters';
 
 export default function DesktopTransactionList({ transactions }: { transactions: any[] }) {
@@ -40,7 +41,10 @@ export default function DesktopTransactionList({ transactions }: { transactions:
                                     </div>
                                 </td>
                                 <td style={{ padding: '1rem', fontWeight: 500 }}>{t.category}</td>
-                                <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{t.description || '-'}</td>
+                                <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>
+                                    {t.description || '-'}
+                                    {t.receiptUrl && <ReceiptViewer url={t.receiptUrl} transactionId={t.id} />}
+                                </td>
                                 <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{dateObj.toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                                 <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold', color: isIncome ? 'var(--success)' : 'var(--text-primary)' }}>
                                     {isIncome ? '+' : '-'}{formatMoney(t.amount, t.currency)}

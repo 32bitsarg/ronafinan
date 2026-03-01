@@ -1,9 +1,10 @@
 'use client';
 
 import { useRef, useTransition, useState } from 'react';
+import imageCompression from 'browser-image-compression';
 import { addTransaction } from '@/actions/transaction';
 import styles from './TransactionForm.module.css';
-import { PlusCircle, Loader2, ArrowRightLeft } from 'lucide-react';
+import { PlusCircle, Loader2, ArrowRightLeft, Camera } from 'lucide-react';
 
 type Account = {
     id: string;
@@ -22,13 +23,40 @@ export default function TransactionForm({ accounts }: Props) {
     const [isPending, startTransition] = useTransition();
     const [transactionType, setTransactionType] = useState('EXPENSE');
     const [isInstallments, setIsInstallments] = useState(false);
+    const [receiptFile, setReceiptFile] = useState<File | null>(null);
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) {
+            setReceiptFile(null);
+            return;
+        }
+
+        try {
+            const options = {
+                maxSizeMB: 0.5, // 500 KB max
+                maxWidthOrHeight: 1024,
+                useWebWorker: true,
+            };
+            const compressedFile = await imageCompression(file, options);
+            setReceiptFile(compressedFile);
+        } catch (error) {
+            console.error(error);
+            alert("Error al procesar la imagen.");
+        }
+    };
 
     async function actionSubmit(formData: FormData) {
+        if (receiptFile) {
+            formData.append('receipt', receiptFile);
+        }
+
         startTransition(async () => {
             try {
                 await addTransaction(formData);
                 formRef.current?.reset();
-                setTransactionType('EXPENSE'); // Volver a gasto por defecto
+                setTransactionType('EXPENSE');
+                setReceiptFile(null);
             } catch (err) {
                 alert((err as Error).message);
             }
@@ -154,6 +182,23 @@ export default function TransactionForm({ accounts }: Props) {
                         type="text"
                         placeholder="Notas adicionales..."
                         className={styles.input}
+                    />
+                </div>
+
+                {/* Comprobante Image Upload */}
+                <div className={styles.fieldGroup} style={{ border: '1px dashed var(--border-subtle)', padding: '1rem', borderRadius: '8px', textAlign: 'center', backgroundColor: 'var(--bg-main)' }}>
+                    <label htmlFor="receipt" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
+                        <Camera size={24} color={receiptFile ? 'var(--success)' : 'var(--text-secondary)'} />
+                        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>
+                            {receiptFile ? `✅ ${receiptFile.name} (${(receiptFile.size / 1024).toFixed(0)} KB)` : 'Adjuntar Comprobante (Opcional)'}
+                        </span>
+                    </label>
+                    <input
+                        type="file"
+                        id="receipt"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        style={{ display: 'none' }}
                     />
                 </div>
 

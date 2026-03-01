@@ -3,6 +3,7 @@
 import { prisma } from '../lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { getSession } from './auth';
+import { uploadReceipt, deleteReceiptFile } from '../lib/appwrite';
 
 
 // 0. Obtener cuentas del WORKSPACE ACTUAL
@@ -31,11 +32,19 @@ export async function addTransaction(formData: FormData) {
     const installmentsStr = formData.get('installments') as string;
     const installments = installmentsStr ? parseInt(installmentsStr, 10) : 1;
 
+    // Procesar comprobante si viene
+    const receiptFile = formData.get('receipt') as File | null;
+    let receiptUrl: string | null = null;
+
     if (isNaN(amount) || amount <= 0) throw new Error('El monto debe ser un valor positivo.');
     if (!accountId) throw new Error('Debes seleccionar una cuenta de origen.');
 
     const account = await prisma.account.findFirst({ where: { id: accountId, workspaceId: wsId } });
     if (!account) throw new Error('Cuenta no encontrada o no pertenece a este entorno.');
+
+    if (receiptFile && receiptFile.size > 0) {
+        receiptUrl = await uploadReceipt(receiptFile);
+    }
 
     if (type === 'EXPENSE' && installments > 1) {
         // Lógica de Compra en Cuotas (Smart Debt)
@@ -67,6 +76,7 @@ export async function addTransaction(formData: FormData) {
                     currency: account.currency,
                     category,
                     description: description || null,
+                    receiptUrl,
                     accountId,
                     toAccountId: type === 'TRANSFER' ? toAccountId : null,
                     workspaceId: wsId // ASIGNADO AL TENANT
@@ -157,6 +167,27 @@ export async function deleteTransaction(transactionId: string) {
 
         // Borrar evidencia del registro histórico
         await tx.transaction.delete({ where: { id: transactionId } });
+    });
+
+    revalidatePath('/');
+    revalidatePath('/estadisticas');
+}
+
+// 4. Eliminar comprobante de transaccion
+export async function deleteReceipt(transactionId: string) {
+    const user = await getSession();
+    const wsId = user.activeWorkspaceId!;
+
+    const transaction = await prisma.transaction.findFirst({
+        where: { id: transactionId, workspaceId: wsId }
+    });
+
+    if (!transaction || !transaction.receiptUrl) throw new Error("Comprobante no encontrado.");
+
+    await deleteReceiptFile(transaction.receiptUrl);
+    await prisma.transaction.update({
+        where: { id: transactionId },
+        data: { receiptUrl: null }
     });
 
     revalidatePath('/');
