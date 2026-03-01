@@ -31,6 +31,7 @@ export async function addTransaction(formData: FormData) {
 
     const installmentsStr = formData.get('installments') as string;
     const installments = installmentsStr ? parseInt(installmentsStr, 10) : 1;
+    const frequency = (formData.get('frequency') as string) || 'MONTHLY';
 
     // Procesar comprobante si viene
     const receiptFile = formData.get('receipt') as File | null;
@@ -47,23 +48,22 @@ export async function addTransaction(formData: FormData) {
             receiptUrl = await uploadReceipt(receiptFile);
         }
 
-        if (type === 'EXPENSE' && installments > 1) {
-            // Lógica de Compra en Cuotas (Smart Debt)
-            // No afecta el balance actual de la cuenta, se posterga al motor automático
+        if ((type === 'EXPENSE' || type === 'INCOME') && installments > 1) {
+            // Lógica de Compra/Cobro en Cuotas (Smart Debt/Income)
             const amountPerInstallment = amount / installments;
 
             await prisma.recurringTransaction.create({
                 data: {
-                    name: description || `Compra en Cuotas - ${category}`,
+                    name: description || `${type === 'INCOME' ? 'Cobro' : 'Compra'} en Cuotas - ${category}`,
                     amount: amountPerInstallment,
                     currency: account.currency,
-                    type: 'EXPENSE',
+                    type: type as 'EXPENSE' | 'INCOME',
                     category,
-                    frequency: 'MONTHLY',
-                    dayOfMonth: new Date().getDate(), // Cobrar cada mes el mismo día de la compra original
+                    frequency: frequency as 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY',
+                    dayOfMonth: new Date().getDate(),
                     isActive: true,
                     totalInstallments: installments,
-                    currentInstallment: 1, // La cuota 1 se procesará en la próxima corrida del motor si corresponde
+                    currentInstallment: 1,
                     workspaceId: wsId
                 }
             });
@@ -125,6 +125,17 @@ export async function getDashboardData() {
         take: 20,
     });
 
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // Todas las transacciones del mes para calcular el saldo inicial
+    const monthTransactions = await prisma.transaction.findMany({
+        where: {
+            workspaceId: wsId,
+            date: { gte: startOfMonth }
+        }
+    });
+
     const accounts = await prisma.account.findMany({ where: { workspaceId: wsId } });
 
     const totalBalanceArs = accounts
@@ -135,10 +146,31 @@ export async function getDashboardData() {
         .filter(account => account.currency === 'USD')
         .reduce((sum, account) => sum + account.balance, 0);
 
+    // Calcular diferencia neta del mes para revertir al saldo inicial
+    let monthDiffArs = 0;
+    let monthDiffUsd = 0;
+
+    monthTransactions.forEach(t => {
+        const amount = t.amount;
+        if (t.type === 'INCOME') {
+            if (t.currency === 'USD') monthDiffUsd += amount;
+            else monthDiffArs += amount;
+        } else if (t.type === 'EXPENSE') {
+            if (t.currency === 'USD') monthDiffUsd -= amount;
+            else monthDiffArs -= amount;
+        }
+        // Las transferencias no afectan el patrimonio neto total, así que se ignoran aquí
+    });
+
+    const initialBalanceArs = totalBalanceArs - monthDiffArs;
+    const initialBalanceUsd = totalBalanceUsd - monthDiffUsd;
+
     return {
         transactions,
         totalBalanceArs,
         totalBalanceUsd,
+        initialBalanceArs,
+        initialBalanceUsd,
         accounts,
         activeWorkspaceName: user.workspaces.find(w => w.workspaceId === wsId)?.workspace.name || 'Desconocido'
     };

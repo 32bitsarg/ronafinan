@@ -132,22 +132,22 @@ export default function TransactionForm({ accounts }: Props) {
                     )}
                 </div>
 
-                {/* --- Lógica Smart Debt: Cuotas (Aislado para Gastos) --- */}
-                {transactionType === 'EXPENSE' && (
+                {/* --- Lógica Smart Debt: Cuotas (Para Gastos e Ingresos) --- */}
+                {(transactionType === 'EXPENSE' || transactionType === 'INCOME') && (
                     <div className={styles.row}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', padding: '0.5rem 0', width: '100%' }}>
-                            <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.8rem', padding: '0.5rem 0', width: '100%' }}>
+                            <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                                 <input
                                     type="checkbox"
                                     checked={isInstallments}
                                     onChange={(e) => setIsInstallments(e.target.checked)}
                                     style={{ transform: 'scale(1.2)' }}
                                 />
-                                💳 Gasto en Cuotas
+                                💳 {transactionType === 'INCOME' ? 'Ingreso en Cuotas' : 'Gasto en Cuotas'}
                             </label>
 
                             {isInstallments && (
-                                <div style={{ flex: 1 }}>
+                                <div style={{ flex: 1, display: 'flex', gap: '0.5rem', minWidth: '200px' }}>
                                     <input
                                         name="installments"
                                         type="number"
@@ -157,8 +157,18 @@ export default function TransactionForm({ accounts }: Props) {
                                         placeholder="Cuotas"
                                         className={styles.input}
                                         required={isInstallments}
-                                        style={{ marginTop: 0, padding: '0.6rem' }}
+                                        style={{ marginTop: 0, padding: '0.6rem', flex: 1 }}
                                     />
+                                    <select
+                                        name="frequency"
+                                        className={styles.input}
+                                        style={{ marginTop: 0, padding: '0.6rem', flex: 1.5 }}
+                                        defaultValue="MONTHLY"
+                                    >
+                                        <option value="WEEKLY">Semanas</option>
+                                        <option value="BIWEEKLY">Quincenas</option>
+                                        <option value="MONTHLY">Meses</option>
+                                    </select>
                                 </div>
                             )}
                         </div>

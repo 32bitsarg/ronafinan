@@ -1,6 +1,6 @@
 import styles from "./page.module.css";
 import TransactionList from "@/components/TransactionList";
-import { User, Bell, Wallet, Building, CreditCard, HandCoins } from "lucide-react";
+import { User, Bell, Wallet, Building, CreditCard, HandCoins, PiggyBank, Banknote, SmartphoneNfc } from "lucide-react";
 import { processDueRecurringTransactions } from "@/actions/engine";
 import { getDashboardData } from "@/actions/transaction";
 import { getAvailableWorkspaces, getSession } from "@/actions/auth";
@@ -15,16 +15,60 @@ export default async function Home() {
   const session = await getSession();
   const workspaces = await getAvailableWorkspaces();
   const data = await getDashboardData();
-  const { accounts, totalBalanceArs, totalBalanceUsd } = data;
+  const { accounts, totalBalanceArs, totalBalanceUsd, initialBalanceArs, initialBalanceUsd } = data;
 
-  // Función para renderizar el icono adecuado por tipo de cuenta
-  const renderAccountIcon = (type: string) => {
+  // Función para obtener iconos y colores por tipo de cuenta
+  const getAccountStyles = (type: string) => {
     switch (type) {
-      case 'CASH': return <Wallet size={20} />;
-      case 'BANK': return <Building size={20} />;
-      case 'CREDIT_CARD': return <CreditCard size={20} color="var(--accent-primary)" />;
-      case 'DEBT': return <HandCoins size={20} color="var(--error)" />;
-      default: return <Wallet size={20} />;
+      case 'SAVINGS':
+        return {
+          icon: <PiggyBank size={20} />,
+          bgColor: 'hsl(125, 40%, 96%)',
+          textColor: '#1f2937',
+          iconColor: '#10b981'
+        };
+      case 'CASH':
+        return {
+          icon: <Banknote size={20} />,
+          bgColor: 'hsl(45, 40%, 96%)',
+          textColor: '#1f2937',
+          iconColor: '#f59e0b'
+        };
+      case 'E-WALLET':
+        return {
+          icon: <SmartphoneNfc size={20} />,
+          bgColor: 'hsl(199, 40%, 96%)',
+          textColor: '#1f2937',
+          iconColor: '#0ea5e9'
+        };
+      case 'BANK':
+        return {
+          icon: <Building size={20} />,
+          bgColor: 'hsl(220, 30%, 97%)',
+          textColor: '#1f2937',
+          iconColor: '#3b82f6'
+        };
+      case 'CREDIT_CARD':
+        return {
+          icon: <CreditCard size={20} />,
+          bgColor: 'hsl(262, 30%, 97%)',
+          textColor: '#1f2937',
+          iconColor: '#8b5cf6'
+        };
+      case 'DEBT':
+        return {
+          icon: <HandCoins size={20} />,
+          bgColor: 'hsl(0, 30%, 97%)',
+          textColor: '#1f2937',
+          iconColor: '#ef4444'
+        };
+      default:
+        return {
+          icon: <Wallet size={20} />,
+          bgColor: 'var(--bg-surface)',
+          textColor: 'var(--text-primary)',
+          iconColor: 'var(--accent-primary)'
+        };
     }
   };
 
@@ -50,7 +94,6 @@ export default async function Home() {
             <WorkspaceSwitcher
               workspaces={workspaces.map(w => ({
                 id: w.id,
-                // Recortamos "Personal de X" a simplemente "Personal" para UX
                 name: w.name.replace(/^Personal de .*$/, 'Personal')
               }))}
               activeId={session.activeWorkspaceId!}
@@ -78,19 +121,26 @@ export default async function Home() {
             </div>
           ) : (
             <div className={styles.accountsScroll}>
-              {accounts.map(acc => (
-                <div key={acc.id} className={styles.accountCard}>
-                  <div className={styles.accountIconWrap}>
-                    {renderAccountIcon(acc.type)}
+              {accounts.map(acc => {
+                const stylesObj = getAccountStyles(acc.type);
+                return (
+                  <div
+                    key={acc.id}
+                    className={styles.accountCard}
+                    style={{ backgroundColor: stylesObj.bgColor, borderColor: 'rgba(0,0,0,0.05)' }}
+                  >
+                    <div className={styles.accountIconWrap} style={{ backgroundColor: 'rgba(255,255,255,0.5)', color: stylesObj.iconColor, border: 'none' }}>
+                      {stylesObj.icon}
+                    </div>
+                    <div className={styles.accountCardInfo}>
+                      <p className={styles.accountName} style={{ color: stylesObj.textColor, opacity: 0.8 }}>{acc.name}</p>
+                      <p className={styles.accountBalance} style={{ color: stylesObj.textColor }}>
+                        {formatMoney(acc.balance, acc.currency)}
+                      </p>
+                    </div>
                   </div>
-                  <div className={styles.accountCardInfo}>
-                    <p className={styles.accountName}>{acc.name}</p>
-                    <p className={styles.accountBalance}>
-                      {formatMoney(acc.balance, acc.currency)}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>

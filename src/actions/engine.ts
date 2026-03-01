@@ -21,69 +21,78 @@ export async function processDueRecurringTransactions() {
 
     for (const recur of activeRecurring) {
         // MVP: Solo soportamos pagos MENSUALES por ahora, más adelante expandir "WEEKLY/DAILY"
-        if (recur.frequency === 'MONTHLY' && recur.dayOfMonth && currentDate.getDate() >= recur.dayOfMonth) {
-            let shouldProcess = false;
+        let shouldProcess = false;
+        let targetDate = currentDate;
 
-            // CASO A: Nunca se ha procesado (es nuevo este mes)
-            if (!recur.lastProcessed) {
-                shouldProcess = true;
-            }
-            // CASO B: Se procesó antes, pero ¿fue este mes?
-            else {
-                const lastDate = new Date(recur.lastProcessed);
-                const lastMonth = lastDate.getMonth();
-                const lastYear = lastDate.getFullYear();
-
-                // Si el año o el mes es diferente, significa que todavía no se cobró/ingresó este mes exacto
-                if (lastYear !== currentDate.getFullYear() || lastMonth !== currentDate.getMonth()) {
+        // Lógica de cálculo de fecha de vencimiento según frecuencia
+        if (recur.frequency === 'MONTHLY') {
+            if (recur.dayOfMonth && currentDate.getDate() >= recur.dayOfMonth) {
+                if (!recur.lastProcessed) {
                     shouldProcess = true;
+                } else {
+                    const lastDate = new Date(recur.lastProcessed);
+                    if (lastDate.getFullYear() !== currentDate.getFullYear() || lastDate.getMonth() !== currentDate.getMonth()) {
+                        shouldProcess = true;
+                    }
+                }
+                targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), recur.dayOfMonth || 1);
+            }
+        } else {
+            // Para WEEKLY y BIWEEKLY usamos diferencia de días
+            const lastDate = recur.lastProcessed ? new Date(recur.lastProcessed) : new Date(recur.createdAt);
+            const diffTime = Math.abs(currentDate.getTime() - lastDate.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            const daysNeeded = recur.frequency === 'WEEKLY' ? 7 : 14;
+
+            if (diffDays >= daysNeeded) {
+                shouldProcess = true;
+                // La fecha de compra/cobro es N días después de la última
+                targetDate = new Date(lastDate);
+                targetDate.setDate(targetDate.getDate() + daysNeeded);
+            }
+        }
+
+        if (shouldProcess) {
+            // Si es cuota, lo agregamos a la descripción
+            let desc = `Cobro/Pago Automático: ${recur.name}`;
+            let isNowCompleted = false;
+            let nextInstallment = recur.currentInstallment;
+
+            if (recur.totalInstallments && recur.currentInstallment) {
+                desc = `${recur.name} (Cuota ${recur.currentInstallment}/${recur.totalInstallments})`;
+
+                if (recur.currentInstallment >= recur.totalInstallments) {
+                    isNowCompleted = true; // Se acabó la fiesta
+                } else {
+                    nextInstallment = recur.currentInstallment + 1;
                 }
             }
 
-            if (shouldProcess) {
-                // Generamos la fecha exacta del evento de este mes
-                const eventDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), recur.dayOfMonth);
-
-                // Si es cuota, lo agregamos a la descripción
-                let desc = `Cobro/Pago Automático: ${recur.name}`;
-                let isNowCompleted = false;
-                let nextInstallment = recur.currentInstallment;
-
-                if (recur.totalInstallments && recur.currentInstallment) {
-                    desc = `${recur.name} (Cuota ${recur.currentInstallment}/${recur.totalInstallments})`;
-
-                    if (recur.currentInstallment >= recur.totalInstallments) {
-                        isNowCompleted = true; // Se acabó la fiesta, desactivamos la cuota para el próximo mes
-                    } else {
-                        nextInstallment = recur.currentInstallment + 1;
-                    }
+            // 2. Insertamos la transacción real
+            await prisma.transaction.create({
+                data: {
+                    amount: recur.amount,
+                    currency: recur.currency,
+                    type: recur.type,
+                    category: recur.category,
+                    description: desc,
+                    date: targetDate,
+                    workspaceId: recur.workspaceId
                 }
+            });
 
-                // 2. Insertamos la transacción real en el historial conectada a la familia
-                await prisma.transaction.create({
-                    data: {
-                        amount: recur.amount,
-                        currency: recur.currency,
-                        type: recur.type, // INCOME o EXPENSE dinámico
-                        category: recur.category,
-                        description: desc,
-                        date: eventDate,
-                        workspaceId: recur.workspaceId // Asignado a su respectivo tenant!
-                    }
-                });
+            // 3. MARCADO: Actualizamos para indicar que "ya se procesó"
+            await prisma.recurringTransaction.update({
+                where: { id: recur.id },
+                data: {
+                    lastProcessed: targetDate, // Usamos la fecha del evento, no necesariamente 'hoy' si hay atraso
+                    isActive: !isNowCompleted,
+                    currentInstallment: nextInstallment
+                }
+            });
 
-                // 3. MARCADO: Actualizamos para indicar que "ya se cobró hoy" y progresar/cerrar la cuota
-                await prisma.recurringTransaction.update({
-                    where: { id: recur.id },
-                    data: {
-                        lastProcessed: currentDate,
-                        isActive: !isNowCompleted,
-                        currentInstallment: nextInstallment
-                    }
-                });
-
-                newChargesCount++;
-            }
+            newChargesCount++;
         }
     }
 

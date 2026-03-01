@@ -2,7 +2,7 @@ import { getSession, getAvailableWorkspaces } from "@/actions/auth";
 import { getDashboardData } from "@/actions/transaction";
 import { getForecastData } from "@/actions/forecasting";
 import WorkspaceSwitcher from "@/components/WorkspaceSwitcher";
-import { Wallet, Building, CreditCard, ArrowUpRight, ArrowDownLeft, HandCoins, PieChart, TrendingDown, Target, LineChart } from "lucide-react";
+import { Wallet, Building, CreditCard, ArrowUpRight, ArrowDownLeft, HandCoins, PieChart, TrendingDown, Target, LineChart, PiggyBank, Banknote, SmartphoneNfc } from "lucide-react";
 import DesktopTransactionList from "@/components/DesktopTransactionList";
 import ForecastChart from "@/components/ForecastChart";
 import { formatMoney } from '@/lib/formatters';
@@ -13,16 +13,60 @@ export default async function DesktopHome() {
     const session = await getSession();
     const workspaces = await getAvailableWorkspaces();
     const data = await getDashboardData();
-    const { accounts, totalBalanceArs, totalBalanceUsd, transactions } = data;
+    const { accounts, totalBalanceArs, totalBalanceUsd, transactions, initialBalanceArs, initialBalanceUsd } = data;
     const forecastData = await getForecastData();
 
-    const renderAccountIcon = (type: string) => {
+    const getAccountStyles = (type: string) => {
         switch (type) {
-            case 'CASH': return <Wallet size={20} />;
-            case 'BANK': return <Building size={20} />;
-            case 'CREDIT_CARD': return <CreditCard size={20} color="var(--accent-primary)" />;
-            case 'DEBT': return <HandCoins size={20} color="var(--error)" />;
-            default: return <Wallet size={20} />;
+            case 'SAVINGS':
+                return {
+                    icon: <PiggyBank size={20} />,
+                    bgColor: 'hsl(125, 40%, 96%)',
+                    textColor: '#1f2937',
+                    iconColor: '#10b981'
+                };
+            case 'CASH':
+                return {
+                    icon: <Banknote size={20} />,
+                    bgColor: 'hsl(45, 40%, 96%)',
+                    textColor: '#1f2937',
+                    iconColor: '#f59e0b'
+                };
+            case 'E-WALLET':
+                return {
+                    icon: <SmartphoneNfc size={20} />,
+                    bgColor: 'hsl(199, 40%, 96%)',
+                    textColor: '#1f2937',
+                    iconColor: '#0ea5e9'
+                };
+            case 'BANK':
+                return {
+                    icon: <Building size={20} />,
+                    bgColor: 'hsl(220, 30%, 97%)',
+                    textColor: '#1f2937',
+                    iconColor: '#3b82f6'
+                };
+            case 'CREDIT_CARD':
+                return {
+                    icon: <CreditCard size={20} />,
+                    bgColor: 'hsl(262, 30%, 97%)',
+                    textColor: '#1f2937',
+                    iconColor: '#8b5cf6'
+                };
+            case 'DEBT':
+                return {
+                    icon: <HandCoins size={20} />,
+                    bgColor: 'hsl(0, 30%, 97%)',
+                    textColor: '#1f2937',
+                    iconColor: '#ef4444'
+                };
+            default:
+                return {
+                    icon: <Wallet size={20} />,
+                    bgColor: 'var(--bg-surface)',
+                    textColor: 'var(--text-primary)',
+                    iconColor: 'var(--accent-primary)'
+                };
         }
     };
 
@@ -69,7 +113,12 @@ export default async function DesktopHome() {
                         <div>
                             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: '0 0 0.2rem 0', fontWeight: '500' }}>Patrimonio Neto Total</p>
                             <h2 style={{ fontSize: '2.5rem', margin: 0, fontWeight: '800' }}>{formatMoney(totalBalanceArs)}</h2>
-                            {totalBalanceUsd > 0 && <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0 0', fontWeight: '500' }}>{formatMoney(totalBalanceUsd, 'USD')}</p>}
+                            <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', marginTop: '0.2rem' }}>
+                                {totalBalanceUsd > 0 && <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', margin: 0, fontWeight: '500' }}>{formatMoney(totalBalanceUsd, 'USD')}</p>}
+                                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, opacity: 0.8 }}>
+                                    (Iniciaste el mes con: <strong>{formatMoney(initialBalanceArs)}</strong>{initialBalanceUsd > 0 && ` + ${formatMoney(initialBalanceUsd, 'USD')}`})
+                                </p>
+                            </div>
                         </div>
                         <div style={{ display: 'flex', gap: '1rem' }}>
                             <div style={{ backgroundColor: 'var(--bg-main)', padding: '1rem', borderRadius: '8px', minWidth: '130px' }}>
@@ -104,19 +153,33 @@ export default async function DesktopHome() {
                             {accounts.length === 0 ? (
                                 <p style={{ color: 'var(--text-secondary)' }}>No tienes billeteras.</p>
                             ) : (
-                                accounts.map(acc => (
-                                    <div key={acc.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', backgroundColor: 'var(--bg-main)', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                            <div style={{ padding: '8px', backgroundColor: 'var(--bg-surface)', borderRadius: '50%', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                {renderAccountIcon(acc.type)}
+                                accounts.map(acc => {
+                                    const stylesObj = getAccountStyles(acc.type);
+                                    return (
+                                        <div
+                                            key={acc.id}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                padding: '0.75rem 1rem',
+                                                backgroundColor: stylesObj.bgColor,
+                                                borderRadius: '8px',
+                                                border: '1px solid rgba(0,0,0,0.05)'
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                <div style={{ padding: '8px', backgroundColor: 'rgba(255,255,255,0.4)', borderRadius: '50%', color: stylesObj.iconColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    {stylesObj.icon}
+                                                </div>
+                                                <p style={{ fontWeight: '600', fontSize: '0.95rem', margin: 0, color: stylesObj.textColor }}>{acc.name}</p>
                                             </div>
-                                            <p style={{ fontWeight: '600', fontSize: '0.95rem', margin: 0 }}>{acc.name}</p>
+                                            <p style={{ margin: 0, fontWeight: '700', fontSize: '1rem', color: stylesObj.textColor }}>
+                                                {formatMoney(acc.balance, acc.currency)}
+                                            </p>
                                         </div>
-                                        <p style={{ margin: 0, fontWeight: '700', fontSize: '1rem' }}>
-                                            {formatMoney(acc.balance, acc.currency)}
-                                        </p>
-                                    </div>
-                                ))
+                                    );
+                                })
                             )}
                         </div>
                     </div>

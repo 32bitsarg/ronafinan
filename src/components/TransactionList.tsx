@@ -1,14 +1,13 @@
 import { getDashboardData } from '@/actions/transaction';
 import styles from './TransactionList.module.css';
-import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft, LineChart, Paperclip } from 'lucide-react';
-import TransactionItemActions from './TransactionItemActions';
-import ReceiptViewer from './ReceiptViewer';
-import Link from 'next/link';
+import { ArrowUpRight, ArrowDownLeft, LineChart } from 'lucide-react';
 import { formatMoney } from '@/lib/formatters';
+import TransactionItem from './TransactionItem';
+import Link from 'next/link';
 
 export default async function TransactionList() {
     const data = await getDashboardData();
-    const { transactions, totalBalanceArs, totalBalanceUsd } = data;
+    const { transactions, totalBalanceArs, totalBalanceUsd, initialBalanceArs, initialBalanceUsd } = data;
 
     // Calculamos gastos e ingresos separados por moneda
     let totalIncomeArs = 0;
@@ -42,6 +41,11 @@ export default async function TransactionList() {
                             {formatMoney(totalBalanceUsd, 'USD')}
                         </h2>
                     )}
+
+                    <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '500' }}>
+                        Iniciaste el mes con <strong style={{ color: 'white' }}>{formatMoney(initialBalanceArs)}</strong>
+                        {initialBalanceUsd > 0 && ` + ${formatMoney(initialBalanceUsd, 'USD')}`}
+                    </p>
                 </div>
 
                 <p className={styles.balanceLabel}>Resumen de Flujo Mensual (ARS)</p>
@@ -115,35 +119,9 @@ export default async function TransactionList() {
                     </div>
                 ) : (
                     <ul className={styles.list}>
-                        {transactions.map((t: any) => {
-                            const dateObj = new Date(t.date);
-                            const isIncome = t.type === 'INCOME';
-
-                            return (
-                                <li key={t.id} className={styles.listItem}>
-                                    <div className={styles.itemLeft}>
-                                        <div className={`${styles.itemIcon} ${isIncome ? styles.bgGreenLight : styles.bgRedLight}`}>
-                                            {isIncome ? <TrendingUp size={20} className={styles.textGreen} /> : <TrendingDown size={20} className={styles.textRed} />}
-                                        </div>
-                                        <div className={styles.itemInfo}>
-                                            <p className={styles.itemCategory}>{t.category}</p>
-                                            <p className={styles.itemDate}>
-                                                {t.description ? `${t.description} • ` : ''}
-                                                {dateObj.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' })}
-                                                {t.receiptUrl && <ReceiptViewer url={t.receiptUrl} transactionId={t.id} />}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className={styles.itemRight} style={{ display: 'flex', alignItems: 'center' }}>
-                                        <p className={`${styles.itemAmount} ${isIncome ? styles.textGreen : styles.textPrimary}`}>
-                                            {isIncome ? '+' : '-'}{formatMoney(t.amount, t.currency)}
-                                        </p>
-                                        <TransactionItemActions transactionId={t.id} />
-                                    </div>
-                                </li>
-                            );
-                        })}
+                        {transactions.map((t: any) => (
+                            <TransactionItem key={t.id} t={t} />
+                        ))}
                     </ul>
                 )}
             </div>
