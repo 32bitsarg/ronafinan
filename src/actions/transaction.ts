@@ -36,75 +36,82 @@ export async function addTransaction(formData: FormData) {
     const receiptFile = formData.get('receipt') as File | null;
     let receiptUrl: string | null = null;
 
-    if (isNaN(amount) || amount <= 0) throw new Error('El monto debe ser un valor positivo.');
-    if (!accountId) throw new Error('Debes seleccionar una cuenta de origen.');
+    if (isNaN(amount) || amount <= 0) return { error: 'El monto debe ser un valor positivo.' };
+    if (!accountId) return { error: 'Debes seleccionar una cuenta de origen.' };
 
     const account = await prisma.account.findFirst({ where: { id: accountId, workspaceId: wsId } });
-    if (!account) throw new Error('Cuenta no encontrada o no pertenece a este entorno.');
+    if (!account) return { error: 'Cuenta no encontrada o no pertenece a este entorno.' };
 
-    if (receiptFile && receiptFile.size > 0) {
-        receiptUrl = await uploadReceipt(receiptFile);
-    }
+    try {
+        if (receiptFile && receiptFile.size > 0) {
+            receiptUrl = await uploadReceipt(receiptFile);
+        }
 
-    if (type === 'EXPENSE' && installments > 1) {
-        // Lógica de Compra en Cuotas (Smart Debt)
-        // No afecta el balance actual de la cuenta, se posterga al motor automático
-        const amountPerInstallment = amount / installments;
+        if (type === 'EXPENSE' && installments > 1) {
+            // Lógica de Compra en Cuotas (Smart Debt)
+            // No afecta el balance actual de la cuenta, se posterga al motor automático
+            const amountPerInstallment = amount / installments;
 
-        await prisma.recurringTransaction.create({
-            data: {
-                name: description || `Compra en Cuotas - ${category}`,
-                amount: amountPerInstallment,
-                currency: account.currency,
-                type: 'EXPENSE',
-                category,
-                frequency: 'MONTHLY',
-                dayOfMonth: new Date().getDate(), // Cobrar cada mes el mismo día de la compra original
-                isActive: true,
-                totalInstallments: installments,
-                currentInstallment: 1, // La cuota 1 se procesará en la próxima corrida del motor si corresponde
-                workspaceId: wsId
-            }
-        });
-    } else {
-        // Transacción Estándar Inmediata
-        await prisma.$transaction(async (tx) => {
-            await tx.transaction.create({
+            await prisma.recurringTransaction.create({
                 data: {
-                    amount,
-                    type,
+                    name: description || `Compra en Cuotas - ${category}`,
+                    amount: amountPerInstallment,
                     currency: account.currency,
+                    type: 'EXPENSE',
                     category,
-                    description: description || null,
-                    receiptUrl,
-                    accountId,
-                    toAccountId: type === 'TRANSFER' ? toAccountId : null,
-                    workspaceId: wsId // ASIGNADO AL TENANT
-                },
-            });
-
-            if (type === 'INCOME') {
-                await tx.account.update({ where: { id: accountId }, data: { balance: { increment: amount } } });
-            }
-            else if (type === 'EXPENSE') {
-                await tx.account.update({ where: { id: accountId }, data: { balance: { decrement: amount } } });
-            }
-            else if (type === 'TRANSFER') {
-                if (!toAccountId || accountId === toAccountId) throw new Error("Selecciona una cuenta destino diferente.");
-
-                const toAccount = await tx.account.findFirst({ where: { id: toAccountId, workspaceId: wsId } });
-                if (account.currency !== toAccount?.currency) {
-                    throw new Error("Para transferir entre monedas diferentes se requiere Exchange (No soportado)");
+                    frequency: 'MONTHLY',
+                    dayOfMonth: new Date().getDate(), // Cobrar cada mes el mismo día de la compra original
+                    isActive: true,
+                    totalInstallments: installments,
+                    currentInstallment: 1, // La cuota 1 se procesará en la próxima corrida del motor si corresponde
+                    workspaceId: wsId
                 }
+            });
+        } else {
+            // Transacción Estándar Inmediata
+            await prisma.$transaction(async (tx) => {
+                await tx.transaction.create({
+                    data: {
+                        amount,
+                        type,
+                        currency: account.currency,
+                        category,
+                        description: description || null,
+                        receiptUrl,
+                        accountId,
+                        toAccountId: type === 'TRANSFER' ? toAccountId : null,
+                        workspaceId: wsId // ASIGNADO AL TENANT
+                    },
+                });
 
-                await tx.account.update({ where: { id: accountId }, data: { balance: { decrement: amount } } });
-                await tx.account.update({ where: { id: toAccountId }, data: { balance: { increment: amount } } });
-            }
-        });
+                if (type === 'INCOME') {
+                    await tx.account.update({ where: { id: accountId }, data: { balance: { increment: amount } } });
+                }
+                else if (type === 'EXPENSE') {
+                    await tx.account.update({ where: { id: accountId }, data: { balance: { decrement: amount } } });
+                }
+                else if (type === 'TRANSFER') {
+                    if (!toAccountId || accountId === toAccountId) throw new Error("Selecciona una cuenta destino diferente.");
+
+                    const toAccount = await tx.account.findFirst({ where: { id: toAccountId, workspaceId: wsId } });
+                    if (account.currency !== toAccount?.currency) {
+                        throw new Error("Para transferir entre monedas diferentes se requiere Exchange (No soportado)");
+                    }
+
+                    await tx.account.update({ where: { id: accountId }, data: { balance: { decrement: amount } } });
+                    await tx.account.update({ where: { id: toAccountId }, data: { balance: { increment: amount } } });
+                }
+            });
+        }
+
+        revalidatePath('/');
+        revalidatePath('/estadisticas');
+        return { success: true };
+
+    } catch (e: any) {
+        console.error("Detalle del error en addTransaction:", e);
+        return { error: e?.message || "Algo falló en el servidor." };
     }
-
-    revalidatePath('/');
-    revalidatePath('/estadisticas');
 }
 
 // 2. Traer info del Dashboard (Aislado por Workspace)

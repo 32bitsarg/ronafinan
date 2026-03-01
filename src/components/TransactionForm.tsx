@@ -53,10 +53,14 @@ export default function TransactionForm({ accounts }: Props) {
 
         startTransition(async () => {
             try {
-                await addTransaction(formData);
-                formRef.current?.reset();
-                setTransactionType('EXPENSE');
-                setReceiptFile(null);
+                const res = await addTransaction(formData);
+                if (res?.error) {
+                    alert(res.error);
+                } else {
+                    formRef.current?.reset();
+                    setTransactionType('EXPENSE');
+                    setReceiptFile(null);
+                }
             } catch (err) {
                 alert((err as Error).message);
             }
