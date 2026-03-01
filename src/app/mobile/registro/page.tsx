@@ -1,10 +1,12 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import { register } from '@/actions/auth';
 import Link from 'next/link';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function RegisterPage() {
+    const [showPassword, setShowPassword] = useState(false);
     const [error, formAction, isPending] = useActionState(async (prevState: any, formData: FormData) => {
         try {
             const res = await register(formData);
@@ -39,13 +41,32 @@ export default function RegisterPage() {
                     style={{ padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}
                     required
                 />
-                <input
-                    name="password"
-                    type="password"
-                    placeholder="Contraseña (+6 caracteres)"
-                    style={{ padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}
-                    required
-                />
+                <div style={{ position: 'relative' }}>
+                    <input
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Contraseña (+10 carácteres, mayúscula y especial)"
+                        style={{ width: '100%', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}
+                        required
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        style={{ position: 'absolute', right: '1rem', top: '1rem', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
+                    >
+                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                </div>
+
+                <div style={{ position: 'relative' }}>
+                    <input
+                        name="confirmPassword"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Confirmar Contraseña"
+                        style={{ width: '100%', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}
+                        required
+                    />
+                </div>
 
                 {error && <p style={{ color: 'var(--error)', fontSize: '0.85rem' }}>{error}</p>}
 

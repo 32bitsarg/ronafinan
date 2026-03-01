@@ -21,7 +21,7 @@ export default async function FamiliaPage() {
     return (
         <div className={styles.container}>
             <header className={styles.header} style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                <Link href="/ajustes" style={{ color: 'var(--text-primary)' }}>
+                <Link href="/mobile/ajustes" style={{ color: 'var(--text-primary)' }}>
                     <ArrowLeft size={28} />
                 </Link>
                 <h1 className={styles.title} style={{ margin: 0 }}>Mi Familia</h1>

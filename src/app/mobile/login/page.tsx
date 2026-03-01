@@ -1,11 +1,12 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import { login } from '@/actions/auth';
 import Link from 'next/link';
-import { Wallet } from 'lucide-react';
+import { Wallet, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
+    const [showPassword, setShowPassword] = useState(false);
     const [error, formAction, isPending] = useActionState(async (prevState: any, formData: FormData) => {
         try {
             const res = await login(formData);
@@ -36,13 +37,22 @@ export default function LoginPage() {
                     style={{ padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}
                     required
                 />
-                <input
-                    name="password"
-                    type="password"
-                    placeholder="Contraseña"
-                    style={{ padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}
-                    required
-                />
+                <div style={{ position: 'relative' }}>
+                    <input
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Contraseña"
+                        style={{ width: '100%', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}
+                        required
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        style={{ position: 'absolute', right: '1rem', top: '1rem', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
+                    >
+                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                </div>
 
                 {error && <p style={{ color: 'var(--error)', fontSize: '0.85rem' }}>{error}</p>}
 

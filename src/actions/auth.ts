@@ -24,9 +24,16 @@ export async function register(formData: FormData) {
     const name = formData.get('name') as string;
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
 
     if (!name || !email || !password) throw new Error("Todos los campos son requeridos.");
-    if (password.length < 6) throw new Error("La contraseña debe tener al menos 6 caracteres.");
+    if (password !== confirmPassword) throw new Error("Las contraseñas no coinciden.");
+
+    // Validación de seguridad de contraseña
+    if (password.length < 10) throw new Error("La contraseña debe tener al menos 10 caracteres.");
+    if (!/[A-Z]/.test(password)) throw new Error("La contraseña debe contener al menos una letra mayúscula.");
+    if (!/[a-z]/.test(password)) throw new Error("La contraseña debe contener al menos una letra minúscula.");
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) throw new Error("La contraseña debe contener al menos un carácter especial.");
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) throw new Error("El email ya está en uso.");

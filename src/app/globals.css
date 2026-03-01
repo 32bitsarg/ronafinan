@@ -88,3 +88,12 @@ a {
     transform: rotate(360deg);
   }
 }
+
+/* Fix global para legibilidad de inputs y selectores nativos */
+input,
+select,
+option,
+textarea {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-main);
+}

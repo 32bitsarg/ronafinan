@@ -51,7 +51,7 @@ export default async function AjustesDesktop() {
                             <h3 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>Gestión Patrimonial</h3>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                <Link href="/ajustes/familia" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: 'var(--bg-main)', borderRadius: '8px', textDecoration: 'none', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)' }}>
+                                <Link href="/desktop/ajustes/familia" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: 'var(--bg-main)', borderRadius: '8px', textDecoration: 'none', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                         <Users size={20} color="var(--text-secondary)" />
                                         <span style={{ fontWeight: '500', fontSize: '0.9rem' }}>Mi Familia (Workspace)</span>
@@ -59,7 +59,7 @@ export default async function AjustesDesktop() {
                                     <ChevronRight size={18} color="var(--text-secondary)" />
                                 </Link>
 
-                                <Link href="/ajustes/cuentas" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: 'var(--bg-main)', borderRadius: '8px', textDecoration: 'none', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)' }}>
+                                <Link href="/desktop/ajustes/cuentas" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: 'var(--bg-main)', borderRadius: '8px', textDecoration: 'none', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                         <CreditCard size={20} color="var(--text-secondary)" />
                                         <span style={{ fontWeight: '500', fontSize: '0.9rem' }}>Mis Bancos y Billeteras</span>
@@ -74,7 +74,7 @@ export default async function AjustesDesktop() {
                             <h3 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>Datos y Plataforma</h3>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                <Link href="/ajustes/seguridad" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: 'var(--bg-main)', borderRadius: '8px', textDecoration: 'none', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)' }}>
+                                <Link href="/desktop/ajustes/seguridad" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: 'var(--bg-main)', borderRadius: '8px', textDecoration: 'none', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                         <Shield size={20} color="var(--success)" />
                                         <span style={{ fontWeight: '500', fontSize: '0.9rem' }}>Privacidad Avanzada</span>

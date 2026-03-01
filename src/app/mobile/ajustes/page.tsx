@@ -41,7 +41,7 @@ export default async function AjustesPage() {
                 <div className={styles.settingsGroup}>
                     <h3 className={styles.groupTitle}>Gestión Patrimonial</h3>
 
-                    <Link href="/ajustes/familia" className={styles.settingItem}>
+                    <Link href="/mobile/ajustes/familia" className={styles.settingItem}>
                         <div className={styles.settingLeft}>
                             <div className={styles.iconWrap}>
                                 <Users size={20} className={styles.iconSecondary} />
@@ -51,7 +51,7 @@ export default async function AjustesPage() {
                         <ChevronRight size={20} className={styles.chevron} />
                     </Link>
 
-                    <Link href="/ajustes/cuentas" className={styles.settingItem}>
+                    <Link href="/mobile/ajustes/cuentas" className={styles.settingItem}>
                         <div className={styles.settingLeft}>
                             <div className={styles.iconWrap}>
                                 <CreditCard size={20} className={styles.iconSecondary} />
@@ -93,7 +93,7 @@ export default async function AjustesPage() {
                 <div className={styles.settingsGroup}>
                     <h3 className={styles.groupTitle}>Datos y Seguridad</h3>
 
-                    <Link href="/ajustes/seguridad" className={styles.settingItem} style={{ textDecoration: 'none' }}>
+                    <Link href="/mobile/ajustes/seguridad" className={styles.settingItem} style={{ textDecoration: 'none' }}>
                         <div className={styles.settingLeft}>
                             <div className={styles.iconWrap}>
                                 <Shield size={20} className={styles.iconSecondary} />
