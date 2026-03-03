@@ -107,3 +107,33 @@ export async function deleteBudget(id: string) {
     });
     revalidatePath('/mobile/presupuesto');
 }
+
+/**
+ * Obtiene el presupuesto mensual TOTAL del workspace actual.
+ * 
+ * Lógica:
+ * 1. Suma los `limit` de todos los Budget del mes/año actual
+ * 2. Si no hay budgets definidos, usa la proyección de ingresos recurrentes
+ *    (idea: si no sé cuánto planea gastar, asumo que planea gastar lo que gana)
+ * 3. Si tampoco hay ingresos recurrentes, retorna 0 (el BudgetTracker 
+ *    mostrará que no hay presupuesto configurado)
+ */
+export async function getMonthlyBudgetTotal(): Promise<{ total: number; isConfigured: boolean }> {
+    const user = await getSession();
+    const wsId = user.activeWorkspaceId!;
+
+    const today = new Date();
+    const month = today.getMonth();
+    const year = today.getFullYear();
+
+    const result = await prisma.budget.aggregate({
+        where: { workspaceId: wsId, month, year },
+        _sum: { limit: true },
+        _count: true
+    });
+
+    const totalBudgeted = result._sum.limit || 0;
+    const isConfigured = result._count > 0;
+
+    return { total: totalBudgeted, isConfigured };
+}

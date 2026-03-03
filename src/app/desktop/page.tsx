@@ -1,265 +1,340 @@
 import { getSession, getAvailableWorkspaces } from "@/actions/auth";
 import { getDashboardData } from "@/actions/transaction";
-import { getForecastData } from "@/actions/forecasting";
+import { getForecastData, getHybridRunway } from "@/actions/forecasting";
 import WorkspaceSwitcher from "@/components/WorkspaceSwitcher";
-import { Wallet, Building, CreditCard, ArrowUpRight, ArrowDownLeft, HandCoins, PieChart, TrendingDown, Target, LineChart, PiggyBank, Banknote, SmartphoneNfc } from "lucide-react";
+import RunwayDashboard from "./RunwayDashboard";
+import { SimulationProvider } from "@/lib/SimulationContext";
+import {
+    Wallet,
+    Building,
+    CreditCard,
+    ArrowUpRight,
+    HandCoins,
+    PieChart,
+    Target,
+    LineChart,
+    PiggyBank,
+    Banknote,
+    SmartphoneNfc,
+    Plus,
+    Calendar,
+    CheckCircle2,
+    AlertCircle
+} from "lucide-react";
+import { processDueRecurringTransactions } from "@/actions/engine";
 import DesktopTransactionList from "@/components/DesktopTransactionList";
 import ForecastChart from "@/components/ForecastChart";
 import { formatMoney } from '@/lib/formatters';
+import styles from './page.module.css';
+import Link from 'next/link';
+import QuickWalletEdit from "./QuickWalletEdit";
+import { CurrencyProvider } from "@/lib/CurrencyContext";
+import CurrencySwitcher from "@/components/CurrencySwitcher";
+import FormattedAmount from "@/components/FormattedAmount";
+import DistributionChart from "@/components/DistributionChart";
+import BudgetTracker from "@/components/BudgetTracker";
+import InsightsPanel from "@/components/InsightsPanel";
+import { getSmartInsights } from "@/lib/finances";
+import { getMonthlyBudgetTotal } from "@/actions/budget";
 
 export const dynamic = 'force-dynamic';
 
 export default async function DesktopHome() {
+    await processDueRecurringTransactions();
     const session = await getSession();
     const workspaces = await getAvailableWorkspaces();
     const data = await getDashboardData();
-    const { accounts, totalBalanceArs, totalBalanceUsd, transactions, initialBalanceArs, initialBalanceUsd } = data;
+    const {
+        accounts,
+        totalBalanceArs,
+        totalBalanceUsd,
+        totalInvestmentsArs,
+        totalInvestmentsUsd,
+        netWorthArs,
+        transactions,
+        initialBalanceArs,
+        investments: rawInvestments,
+        investmentDetails,
+        recurring,
+        totalIncomeArs,
+        totalExpenseArs,
+        savingsRate,
+        expensesByCategory,
+        EXCHANGE_RATE,
+        assetAllocation
+    } = data;
     const forecastData = await getForecastData();
+    const runwayData = await getHybridRunway();
 
+    // Budget: Traer presupuesto real de la DB (suma de todos los Budget del mes)
+    const budgetData = await getMonthlyBudgetTotal();
+
+    // Smart Insights (usa presupuesto real solo si está configurado)
+    const premiumInsights = getSmartInsights({
+        totalExpenseArs,
+        totalIncomeArs,
+        expensesByCategory,
+        budgetArs: budgetData.total
+    });
+
+    // ─── Helper: account icon/color by type ───
     const getAccountStyles = (type: string) => {
         switch (type) {
             case 'SAVINGS':
-                return {
-                    icon: <PiggyBank size={20} />,
-                    bgColor: 'hsl(125, 40%, 96%)',
-                    textColor: '#1f2937',
-                    iconColor: '#10b981'
-                };
+                return { icon: <PiggyBank size={18} />, bgColor: 'hsl(125, 40%, 96%)', iconColor: '#10b981' };
             case 'CASH':
-                return {
-                    icon: <Banknote size={20} />,
-                    bgColor: 'hsl(45, 40%, 96%)',
-                    textColor: '#1f2937',
-                    iconColor: '#f59e0b'
-                };
+                return { icon: <Banknote size={18} />, bgColor: 'hsl(45, 40%, 96%)', iconColor: '#f59e0b' };
             case 'E-WALLET':
-                return {
-                    icon: <SmartphoneNfc size={20} />,
-                    bgColor: 'hsl(199, 40%, 96%)',
-                    textColor: '#1f2937',
-                    iconColor: '#0ea5e9'
-                };
+                return { icon: <SmartphoneNfc size={18} />, bgColor: 'hsl(199, 40%, 96%)', iconColor: '#0ea5e9' };
             case 'BANK':
-                return {
-                    icon: <Building size={20} />,
-                    bgColor: 'hsl(220, 30%, 97%)',
-                    textColor: '#1f2937',
-                    iconColor: '#3b82f6'
-                };
+                return { icon: <Building size={18} />, bgColor: 'hsl(220, 30%, 97%)', iconColor: '#3b82f6' };
             case 'CREDIT_CARD':
-                return {
-                    icon: <CreditCard size={20} />,
-                    bgColor: 'hsl(262, 30%, 97%)',
-                    textColor: '#1f2937',
-                    iconColor: '#8b5cf6'
-                };
+                return { icon: <CreditCard size={18} />, bgColor: 'hsl(262, 30%, 97%)', iconColor: '#8b5cf6' };
             case 'DEBT':
-                return {
-                    icon: <HandCoins size={20} />,
-                    bgColor: 'hsl(0, 30%, 97%)',
-                    textColor: '#1f2937',
-                    iconColor: '#ef4444'
-                };
+                return { icon: <HandCoins size={18} />, bgColor: 'hsl(0, 30%, 97%)', iconColor: '#ef4444' };
             default:
-                return {
-                    icon: <Wallet size={20} />,
-                    bgColor: 'var(--bg-surface)',
-                    textColor: 'var(--text-primary)',
-                    iconColor: 'var(--accent-primary)'
-                };
+                return { icon: <Wallet size={18} />, bgColor: '#f5f5f5', iconColor: '#0a0a0a' };
         }
     };
 
-    let totalIncomeArs = 0, totalExpenseArs = 0, totalIncomeUsd = 0, totalExpenseUsd = 0;
-    const expensesByCategory: Record<string, number> = {};
-
-    transactions.forEach((t: any) => {
-        if (t.type === 'INCOME') {
-            if (t.currency === 'USD') totalIncomeUsd += t.amount;
-            else totalIncomeArs += t.amount;
-        }
-        if (t.type === 'EXPENSE') {
-            if (t.currency === 'USD') totalExpenseUsd += t.amount;
-            else totalExpenseArs += t.amount;
-            expensesByCategory[t.category] = (expensesByCategory[t.category] || 0) + t.amount;
-        }
-    });
-
-
+    // ─── Helper: runway status ───
+    const getRunwayStatus = () => {
+        if (runwayData.daysLeft === -1) return { label: 'Saludable', color: '#22c55e', icon: <CheckCircle2 size={14} /> };
+        if (runwayData.status === 'CRITICAL') return { label: 'Crítico', color: '#ef4444', icon: <AlertCircle size={14} /> };
+        if (runwayData.status === 'WARNING') return { label: 'Atención', color: '#f59e0b', icon: <AlertCircle size={14} /> };
+        return { label: 'Saludable', color: '#22c55e', icon: <CheckCircle2 size={14} /> };
+    };
+    const runwayStatus = getRunwayStatus();
 
     return (
-        <div>
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <div>
-                    <h1 style={{ fontSize: '1.5rem', margin: '0 0 0.2rem 0', fontWeight: '700' }}>Panel General</h1>
-                    <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>Vista resumida de tu dinero y movimientos</p>
-                </div>
-                <div style={{ width: '250px' }}>
-                    <WorkspaceSwitcher
-                        workspaces={workspaces.map(w => ({ id: w.id, name: w.name.replace(/^Personal de .*$/, 'Personal') }))}
-                        activeId={session.activeWorkspaceId!}
-                    />
-                </div>
-            </header>
-
-            {/* Grid Layout for Desktop */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem' }}>
-
-                {/* Left Column: Net Worth & Stats (8 cols) */}
-                <div style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-
-                    {/* Patrimonio Neto Enorme */}
-                    <div style={{ backgroundColor: 'var(--bg-surface)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div>
-                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: '0 0 0.2rem 0', fontWeight: '500' }}>Patrimonio Neto Total</p>
-                            <h2 style={{ fontSize: '2.5rem', margin: 0, fontWeight: '800' }}>{formatMoney(totalBalanceArs)}</h2>
-                            <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', marginTop: '0.2rem' }}>
-                                {totalBalanceUsd > 0 && <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', margin: 0, fontWeight: '500' }}>{formatMoney(totalBalanceUsd, 'USD')}</p>}
-                                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, opacity: 0.8 }}>
-                                    (Iniciaste el mes con: <strong>{formatMoney(initialBalanceArs)}</strong>{initialBalanceUsd > 0 && ` + ${formatMoney(initialBalanceUsd, 'USD')}`})
-                                </p>
-                            </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: '1rem' }}>
-                            <div style={{ backgroundColor: 'var(--bg-main)', padding: '1rem', borderRadius: '8px', minWidth: '130px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--success)', fontSize: '0.85rem' }}>
-                                    <ArrowUpRight size={16} /> <span style={{ fontWeight: '600' }}>Ingresos</span>
-                                </div>
-                                <p style={{ fontSize: '1.25rem', margin: '0.4rem 0 0 0', fontWeight: '700' }}>{formatMoney(totalIncomeArs)}</p>
-                            </div>
-                            <div style={{ backgroundColor: 'var(--bg-main)', padding: '1rem', borderRadius: '8px', minWidth: '130px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--error)', fontSize: '0.85rem' }}>
-                                    <ArrowDownLeft size={16} /> <span style={{ fontWeight: '600' }}>Gastos</span>
-                                </div>
-                                <p style={{ fontSize: '1.25rem', margin: '0.4rem 0 0 0', fontWeight: '700' }}>{formatMoney(totalExpenseArs)}</p>
-                            </div>
-                        </div>
+        <section className={styles.container}>
+            <CurrencyProvider initialExchangeRate={EXCHANGE_RATE}>
+                {/* ═══════ HEADER ═══════ */}
+                <header className={styles.header}>
+                    <div className={styles.titleGroup}>
+                        <h1>Dashboard</h1>
+                        <p>Resumen consolidado de patrimonio y actividad.</p>
                     </div>
 
-                    {/* Desktop Transaction List (Using a Table) */}
-                    <div style={{ backgroundColor: 'var(--bg-surface)', borderRadius: '12px', border: '1px solid var(--border-subtle)', padding: '1.5rem' }}>
-                        <h3 style={{ fontSize: '1.1rem', margin: '0 0 1rem 0', fontWeight: '600' }}>Movimientos Recientes</h3>
-                        <DesktopTransactionList transactions={transactions} />
+                    <div className={styles.headerActions}>
+                        <CurrencySwitcher />
+                        <Link href="/desktop/nuevo" className={styles.primaryAction}>
+                            <Plus size={16} />
+                            <span>Nuevo</span>
+                        </Link>
+                        <div className={styles.switcherWrapper}>
+                            <WorkspaceSwitcher
+                                workspaces={workspaces.map(w => ({ id: w.id, name: w.name.replace(/^Personal de .*$/, 'Personal') }))}
+                                activeId={session.activeWorkspaceId!}
+                            />
+                        </div>
                     </div>
-                </div>
+                </header>
 
-                {/* Right Column: Wallets & Quick Actions (4 cols) */}
-                <div style={{ gridColumn: 'span 4', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <SimulationProvider>
+                    <div className={styles.dashboardGrid}>
 
-                    {/* Billeteras Card */}
-                    <div style={{ backgroundColor: 'var(--bg-surface)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-                        <h3 style={{ fontSize: '1.1rem', margin: '0 0 1rem 0', fontWeight: '600' }}>Mis Billeteras</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                            {accounts.length === 0 ? (
-                                <p style={{ color: 'var(--text-secondary)' }}>No tienes billeteras.</p>
-                            ) : (
-                                accounts.map(acc => {
-                                    const stylesObj = getAccountStyles(acc.type);
-                                    return (
-                                        <div
-                                            key={acc.id}
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'space-between',
-                                                padding: '0.75rem 1rem',
-                                                backgroundColor: stylesObj.bgColor,
-                                                borderRadius: '8px',
-                                                border: '1px solid rgba(0,0,0,0.05)'
-                                            }}
-                                        >
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                                <div style={{ padding: '8px', backgroundColor: 'rgba(255,255,255,0.4)', borderRadius: '50%', color: stylesObj.iconColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {/* ═══════ 1. HERO — Patrimonio Neto (Full Width, Dark) ═══════ */}
+                        <div className={`${styles.card} ${styles.heroCard}`}>
+                            <div className={styles.heroHeader}>
+                                <p className={styles.heroLabel}>Patrimonio Neto</p>
+                                <Target size={18} style={{ opacity: 0.3 }} />
+                            </div>
+                            <h2 className={styles.heroAmount}>
+                                <FormattedAmount amount={netWorthArs} originalCurrency="ARS" />
+                            </h2>
+                            <div className={styles.heroFooter}>
+                                <span className={styles.heroTrend}>
+                                    <ArrowUpRight size={14} />
+                                    Líquido: <FormattedAmount amount={totalBalanceArs + (totalBalanceUsd * EXCHANGE_RATE)} originalCurrency="ARS" />
+                                </span>
+                                <span className={styles.heroTrend}>
+                                    <PieChart size={14} />
+                                    Invertido: <FormattedAmount amount={totalInvestmentsArs + (totalInvestmentsUsd * EXCHANGE_RATE)} originalCurrency="ARS" />
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* ═══════ 2. STATS ROW — 4 KPI Cards ═══════ */}
+                        <div className={styles.statsRow}>
+                            {/* Ingresos */}
+                            <div className={styles.statCard}>
+                                <span className={styles.statLabel}>Ingresos Brutos</span>
+                                <span className={styles.statValue}>
+                                    <FormattedAmount amount={totalIncomeArs} originalCurrency="ARS" />
+                                </span>
+                                <span className={styles.statMeta}>
+                                    <span className={styles.statIndicator} style={{ backgroundColor: '#22c55e' }} />
+                                    este mes
+                                </span>
+                            </div>
+
+                            {/* Gastos */}
+                            <div className={styles.statCard}>
+                                <span className={styles.statLabel}>Gastos Brutos</span>
+                                <span className={styles.statValue}>
+                                    <FormattedAmount amount={totalExpenseArs} originalCurrency="ARS" />
+                                </span>
+                                <span className={styles.statMeta}>
+                                    <span className={styles.statIndicator} style={{ backgroundColor: '#ef4444' }} />
+                                    este mes
+                                </span>
+                            </div>
+
+                            {/* Inversiones */}
+                            <div className={styles.statCard}>
+                                <span className={styles.statLabel}>Inversiones</span>
+                                <span className={styles.statValue}>
+                                    <FormattedAmount amount={totalInvestmentsArs + (totalInvestmentsUsd * EXCHANGE_RATE)} originalCurrency="ARS" />
+                                </span>
+                                <span className={styles.statMeta}>
+                                    <span className={styles.statIndicator} style={{ backgroundColor: '#3b82f6' }} />
+                                    activos
+                                </span>
+                            </div>
+
+                            {/* Runway — Compact */}
+                            <div className={styles.statCard}>
+                                <span className={styles.statLabel}>Runway</span>
+                                <span className={styles.statValue}>
+                                    {runwayData.daysLeft === -1 ? '∞' : runwayData.daysLeft}
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 500, color: '#737373', marginLeft: '0.35rem' }}>
+                                        días
+                                    </span>
+                                </span>
+                                <span className={styles.statMeta}>
+                                    <span className={styles.statIndicator} style={{ backgroundColor: runwayStatus.color }} />
+                                    {runwayStatus.label} • {formatMoney(runwayData.burnRate)}/día
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* ═══════ 2.5. RUNWAY SIMULATOR — Compact full-width ═══════ */}
+                        <div className={styles.card}>
+                            <RunwayDashboard data={runwayData} />
+                        </div>
+
+                        {/* ═══════ 3. CONTENT ROW — Chart + Wallets ═══════ */}
+                        <div className={styles.contentRow}>
+                            {/* Chart */}
+                            <div className={styles.card}>
+                                <div className={styles.cardTitle}>
+                                    <span>Flujo Mensual</span>
+                                    <LineChart size={16} style={{ opacity: 0.3 }} />
+                                </div>
+                                <ForecastChart data={forecastData} />
+                            </div>
+
+                            {/* Wallets */}
+                            <div className={styles.card}>
+                                <div className={styles.cardTitle}>
+                                    <span>Billeteras</span>
+                                    <Link href="/desktop/ajustes/cuentas" style={{ fontSize: '0.7rem', color: '#a3a3a3', textDecoration: 'none', fontWeight: 500 }}>
+                                        Gestionar →
+                                    </Link>
+                                </div>
+                                <div className={styles.walletList}>
+                                    {accounts.slice(0, 6).map(acc => {
+                                        const stylesObj = getAccountStyles(acc.type);
+                                        return (
+                                            <div key={acc.id} className={styles.walletItem}>
+                                                <div className={styles.walletIconBox} style={{ color: stylesObj.iconColor, backgroundColor: stylesObj.bgColor }}>
                                                     {stylesObj.icon}
                                                 </div>
-                                                <p style={{ fontWeight: '600', fontSize: '0.95rem', margin: 0, color: stylesObj.textColor }}>{acc.name}</p>
+                                                <div className={styles.walletInfo}>
+                                                    <p className={styles.walletNameText}>{acc.name}</p>
+                                                    <p className={styles.walletBalanceText}>
+                                                        <FormattedAmount amount={acc.balance} originalCurrency={acc.currency} />
+                                                    </p>
+                                                </div>
+                                                <QuickWalletEdit account={acc} />
                                             </div>
-                                            <p style={{ margin: 0, fontWeight: '700', fontSize: '1rem', color: stylesObj.textColor }}>
-                                                {formatMoney(acc.balance, acc.currency)}
-                                            </p>
-                                        </div>
-                                    );
-                                })
-                            )}
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                </div>
-            </div>
+                        {/* ═══════ 4. ANALYSIS ROW — Distribution + Budget + Agenda ═══════ */}
+                        <div className={styles.analysisRow}>
+                            {/* Distribution */}
+                            <div className={styles.card}>
+                                <div className={styles.cardTitle}>Distribución de Activos</div>
+                                <DistributionChart
+                                    liquidArs={totalBalanceArs + (totalBalanceUsd * EXCHANGE_RATE)}
+                                    investedArs={totalInvestmentsArs + (totalInvestmentsUsd * EXCHANGE_RATE)}
+                                />
+                            </div>
 
-            {/* Segunda Fila de Grid (Estadísticas y Forecast) */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem', marginTop: '1.5rem' }}>
-                <div style={{ gridColumn: 'span 8', backgroundColor: 'var(--bg-surface)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                        <h3 style={{ fontSize: '1.1rem', margin: 0, fontWeight: '600' }}>Flujo de Caja Proyectado</h3>
-                        <LineChart size={20} color="var(--text-secondary)" />
-                    </div>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>Estimación combinando presupuestos y suscripciones activas.</p>
-                    <ForecastChart data={forecastData} />
-                </div>
+                            {/* Budget */}
+                            <div className={styles.card}>
+                                <div className={styles.cardTitle}>Control de Presupuesto</div>
+                                {budgetData.isConfigured ? (
+                                    <BudgetTracker
+                                        currentExpenseArs={totalExpenseArs}
+                                        monthlyBudgetArs={budgetData.total}
+                                    />
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: '0.75rem', padding: '1.5rem 0' }}>
+                                        <Target size={32} style={{ opacity: 0.15 }} />
+                                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#a3a3a3', textAlign: 'center' }}>
+                                            No tenés presupuestos definidos para este mes.
+                                        </p>
+                                        <Link
+                                            href="/desktop/presupuesto"
+                                            style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0a0a0a', textDecoration: 'underline', textUnderlineOffset: '3px' }}
+                                        >
+                                            Crear presupuesto →
+                                        </Link>
+                                    </div>
+                                )}
+                            </div>
 
-                <div style={{ gridColumn: 'span 4', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    <div style={{ backgroundColor: 'var(--bg-surface)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-                            <h3 style={{ fontSize: '1.1rem', margin: 0, fontWeight: '600' }}>Resumen de Gastos</h3>
-                            <PieChart size={20} color="var(--text-secondary)" />
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            {Object.keys(expensesByCategory).length === 0 ? (
-                                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>No hay gastos para analizar.</p>
-                            ) : (
-                                Object.entries(expensesByCategory).sort(([, a], [, b]) => b - a).map(([cat, amount], idx) => {
-                                    const percentage = totalExpenseArs > 0 ? (amount / totalExpenseArs) * 100 : 0;
-                                    const colors = ['#0F172A', '#334155', '#475569', '#64748B'];
-                                    const bgColor = colors[idx % colors.length];
-                                    return (
-                                        <div key={cat}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
-                                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '500' }}>
-                                                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: bgColor }} />
-                                                    {cat}
-                                                </span>
-                                                <span style={{ fontWeight: '600' }}>{formatMoney(amount)}</span>
+                            {/* Agenda */}
+                            <div className={styles.card}>
+                                <div className={styles.cardTitle}>
+                                    Próximas en Agenda
+                                    <Calendar size={16} style={{ opacity: 0.3 }} />
+                                </div>
+                                <div className={styles.activityList}>
+                                    {recurring
+                                        .filter(r => (r.dayOfMonth || 0) >= new Date().getDate())
+                                        .sort((a, b) => (a.dayOfMonth || 0) - (b.dayOfMonth || 0))
+                                        .slice(0, 4)
+                                        .map(r => (
+                                            <div key={r.id} className={styles.activityItem}>
+                                                <div className={styles.activityDot} style={{ backgroundColor: r.type === 'INCOME' ? '#22c55e' : '#0a0a0a' }} />
+                                                <div style={{ flex: 1 }}>
+                                                    <p style={{ margin: 0, fontWeight: 600, fontSize: '0.85rem', color: '#0a0a0a' }}>{r.name}</p>
+                                                    <p style={{ margin: 0, fontSize: '0.78rem', color: '#a3a3a3' }}>
+                                                        Día {r.dayOfMonth} • <FormattedAmount amount={r.amount} originalCurrency={r.currency} />
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div style={{ width: '100%', height: '6px', backgroundColor: 'var(--bg-main)', borderRadius: '99px', overflow: 'hidden' }}>
-                                                <div style={{ width: `${percentage}%`, height: '100%', backgroundColor: bgColor }} />
-                                            </div>
-                                        </div>
-                                    )
-                                })
-                            )}
+                                        ))}
+                                </div>
+                                {recurring.length === 0 && <p className={styles.emptyText}>No hay nada pendiente.</p>}
+                            </div>
+
+                            {/* Smart Insights */}
+                            <div className={styles.card}>
+                                <div className={styles.cardTitle}>Smart Insights</div>
+                                <InsightsPanel insights={premiumInsights as any} />
+                            </div>
                         </div>
                     </div>
 
-                    <div style={{ backgroundColor: 'var(--bg-surface)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1rem' }}>
-                            <div style={{ backgroundColor: 'var(--bg-main)', padding: '0.5rem', borderRadius: '8px' }}>
-                                <Target size={18} color="var(--accent-primary)" />
-                            </div>
-                            <div>
-                                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>Tasa de Ahorro</p>
-                                <p style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0 }}>
-                                    {totalIncomeArs > 0 ? `${Math.max(0, Math.round(((totalIncomeArs - totalExpenseArs) / totalIncomeArs) * 100))}%` : '0%'}
-                                </p>
-                            </div>
+                    {/* ═══════ 5. TRANSACTIONS — Full Width Footer ═══════ */}
+                    <div className={styles.transactionsCard}>
+                        <div className={styles.transactionsHeader}>
+                            Movimientos Recientes
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                            <div style={{ backgroundColor: 'var(--bg-main)', padding: '0.5rem', borderRadius: '8px' }}>
-                                <TrendingDown size={18} color="var(--error)" />
-                            </div>
-                            <div>
-                                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>Mayor Gasto</p>
-                                <p style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0 }}>
-                                    {Object.keys(expensesByCategory).length > 0
-                                        ? Object.keys(expensesByCategory).reduce((a, b) => expensesByCategory[a] > expensesByCategory[b] ? a : b)
-                                        : 'N/A'
-                                    }
-                                </p>
-                            </div>
+                        <div className={styles.transactionsBody}>
+                            <DesktopTransactionList transactions={transactions} />
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
+                </SimulationProvider>
+            </CurrencyProvider>
+        </section>
     );
 }

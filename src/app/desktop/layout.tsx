@@ -24,9 +24,9 @@ export default function DesktopLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <div style={{ backgroundColor: 'var(--bg-main)', color: 'var(--text-primary)', display: 'flex' }}>
+        <div style={{ backgroundColor: '#f5f5f5', color: '#0a0a0a', display: 'flex' }}>
             <DesktopSidebar />
-            <main style={{ marginLeft: '240px', width: 'calc(100% - 240px)', minHeight: '100vh', padding: '2rem 3rem' }}>
+            <main style={{ marginLeft: '240px', width: 'calc(100% - 240px)', minHeight: '100vh', padding: '2rem 2.5rem' }}>
                 {children}
             </main>
         </div>

@@ -1,0 +1,413 @@
+/* ═══════════════════════════════════════════════
+   RoNa Finance — Banking Dashboard
+   Design: Minimalist / Mercury-inspired
+   ═══════════════════════════════════════════════ */
+
+/* --- DESIGN TOKENS --- */
+:root {
+    --dash-bg: #f5f5f5;
+    --dash-card: #ffffff;
+    --dash-border: #e5e5e5;
+    --dash-text: #0a0a0a;
+    --dash-text-secondary: #737373;
+    --dash-text-muted: #a3a3a3;
+    --dash-accent-green: #22c55e;
+    --dash-accent-red: #ef4444;
+    --dash-accent-blue: #3b82f6;
+    --dash-radius: 12px;
+    --dash-radius-sm: 8px;
+}
+
+/* --- CONTAINER --- */
+.container {
+    padding: 0;
+    max-width: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* --- HEADER --- */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.5rem;
+}
+
+.titleGroup h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--dash-text);
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.titleGroup p {
+    font-size: 0.85rem;
+    color: var(--dash-text-secondary);
+    margin: 0.25rem 0 0;
+}
+
+.headerActions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.switcherWrapper {
+    display: flex;
+    align-items: center;
+}
+
+.primaryAction {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--dash-text);
+    color: #ffffff;
+    padding: 0.5rem 1.15rem;
+    border-radius: var(--dash-radius-sm);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: background 0.2s ease;
+    white-space: nowrap;
+}
+
+.primaryAction:hover {
+    background: #262626;
+}
+
+.secondaryAction {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--dash-card);
+    color: var(--dash-text);
+    border: 1px solid var(--dash-border);
+    padding: 0.5rem 1.15rem;
+    border-radius: var(--dash-radius-sm);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.secondaryAction:hover {
+    background: #fafafa;
+    border-color: #d4d4d4;
+}
+
+.iconButton {
+    background: transparent;
+    border: 1px solid var(--dash-border);
+    border-radius: var(--dash-radius-sm);
+    padding: 0.5rem;
+    cursor: pointer;
+    color: var(--dash-text-secondary);
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.iconButton:hover {
+    background: #fafafa;
+    color: var(--dash-text);
+}
+
+/* --- BASE CARD --- */
+.card {
+    background: var(--dash-card);
+    border: 1px solid var(--dash-border);
+    border-radius: var(--dash-radius);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.cardTitle {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--dash-text-secondary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* ─────────────────────────────────────────────
+   HERO CARD — Full width, dark, dominant
+   ───────────────────────────────────────────── */
+.heroCard {
+    background: var(--dash-text);
+    color: #ffffff;
+    border-radius: var(--dash-radius);
+    padding: 2rem 2.5rem;
+    border: none;
+    display: flex;
+    flex-direction: column;
+}
+
+.heroCard:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.heroHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.heroLabel {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.45);
+    margin: 0;
+}
+
+.heroAmount {
+    font-size: 2.75rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0.5rem 0 0.75rem;
+    line-height: 1;
+}
+
+.heroFooter {
+    display: flex;
+    gap: 2.5rem;
+}
+
+.heroTrend {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.45);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+/* ─────────────────────────────────────────────
+   STATS ROW — 4 equal compact cards
+   ───────────────────────────────────────────── */
+.statsRow {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.statCard {
+    background: var(--dash-card);
+    border: 1px solid var(--dash-border);
+    border-radius: var(--dash-radius);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    transition: box-shadow 0.2s ease;
+}
+
+.statCard:hover {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.statLabel {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--dash-text-secondary);
+}
+
+.statValue {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--dash-text);
+    letter-spacing: -0.01em;
+}
+
+.statMeta {
+    font-size: 0.75rem;
+    color: var(--dash-text-muted);
+    font-weight: 500;
+    margin-top: 0.15rem;
+}
+
+.statIndicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 0.35rem;
+}
+
+/* ─────────────────────────────────────────────
+   CONTENT ROW — Chart + Wallets
+   ───────────────────────────────────────────── */
+.contentRow {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 1rem;
+}
+
+/* Wallets */
+.walletList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+}
+
+.walletItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: var(--dash-radius-sm);
+    transition: background 0.15s ease;
+    cursor: default;
+}
+
+.walletItem:hover {
+    background: #f9f9f9;
+}
+
+.walletIconBox {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.walletInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.walletNameText {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--dash-text);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.walletBalanceText {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--dash-text-secondary);
+    margin: 0.1rem 0 0;
+}
+
+/* ─────────────────────────────────────────────
+   ANALYSIS ROW — Distribution + Budget + Agenda
+   ───────────────────────────────────────────── */
+.analysisRow {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+/* ─────────────────────────────────────────────
+   AGENDA / ACTIVITY LIST
+   ───────────────────────────────────────────── */
+.activityList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.activityItem {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.activityDot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+}
+
+.emptyText {
+    font-size: 0.85rem;
+    color: var(--dash-text-muted);
+    text-align: center;
+    padding: 2rem 0;
+}
+
+/* ─────────────────────────────────────────────
+   TRANSACTIONS (FULL WIDTH FOOTER)
+   ───────────────────────────────────────────── */
+.transactionsCard {
+    background: var(--dash-card);
+    border: 1px solid var(--dash-border);
+    border-radius: var(--dash-radius);
+    overflow: hidden;
+}
+
+.transactionsHeader {
+    padding: 1.5rem 2rem 0.75rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--dash-text-secondary);
+}
+
+.transactionsBody {
+    padding: 0 1rem 1rem;
+}
+
+/* ─────────────────────────────────────────────
+   LEGACY GRID CLASSES (kept for compatibility
+   with any child component refs)
+   ───────────────────────────────────────────── */
+.dashboardGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* These are now unused but kept to prevent
+   runtime errors if referenced */
+.bentoHero,
+.bentoRunway,
+.bentoChart,
+.bentoAgenda,
+.bentoInc,
+.bentoExp,
+.bentoInv,
+.bentoWallets,
+.bentoDist,
+.bentoBudget,
+.bentoInsights {
+    display: contents;
+}
+
+.miniStatCard,
+.miniStatLabel,
+.miniStatValue {
+    display: contents;
+}

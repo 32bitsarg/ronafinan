@@ -1,0 +1,72 @@
+.container {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+}
+
+.container::-webkit-scrollbar {
+    display: none;
+}
+
+.insightCard {
+    flex: 1;
+    min-width: 280px;
+    background-color: var(--bg-surface-elevated);
+    border: 1px solid var(--border-subtle);
+    padding: 1.25rem;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.insightCard:hover {
+    transform: translateY(-2px);
+    border-color: var(--text-primary);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.title {
+    font-size: 0.85rem;
+    font-weight: 800;
+}
+
+.text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.iconTip {
+    color: #f59e0b;
+}
+
+.iconWarning {
+    color: #ef4444;
+}
+
+.iconPositive {
+    color: #10b981;
+}
+
+.iconNeutral {
+    color: #3b82f6;
+}
+
+.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-tertiary);
+    font-style: italic;
+    font-size: 0.9rem;
+}

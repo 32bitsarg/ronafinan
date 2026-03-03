@@ -1,0 +1,183 @@
+.wrapper {
+    width: 100%;
+}
+
+.table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 4px;
+    text-align: left;
+    table-layout: fixed;
+    /* Critical: prevents table from expanding beyond container */
+}
+
+/* Column Width Ratios (5 columns total) */
+.thead th:nth-child(1) {
+    width: 50%;
+}
+
+/* Descripción */
+.thead th:nth-child(2) {
+    width: 18%;
+}
+
+/* Fecha */
+.thead th:nth-child(3) {
+    width: 12%;
+}
+
+/* Estado */
+.thead th:nth-child(4) {
+    width: 15%;
+}
+
+/* Monto */
+.thead th:nth-child(5) {
+    width: 5%;
+}
+
+/* Acciones */
+
+/* Monto */
+.thead th {
+    padding: 1rem 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-tertiary);
+    border: none;
+}
+
+.tbody tr {
+    transition: background-color var(--transition-fast);
+    cursor: pointer;
+    border-radius: var(--radius-md);
+}
+
+.tbody tr:hover {
+    background-color: var(--bg-main);
+}
+
+.expandedRow {
+    background-color: var(--bg-main) !important;
+}
+
+.tbody td {
+    padding: 1rem 0.5rem;
+    border: none;
+    vertical-align: middle;
+    overflow: visible;
+    /* Changed from hidden to visible — allows ReceiptViewer images to display */
+}
+
+/* Coinest Style Info Column */
+.infoColumn {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+    /* Important for ellipsis in flexbox */
+}
+
+.textContainer {
+    flex: 1;
+    min-width: 0;
+}
+
+.title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.subtitle {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fullText {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+
+.expandedContent {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed var(--border-subtle);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.badge {
+    display: inline-flex;
+    padding: 0.25rem 0.6rem;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.badgeIncome {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.badgeExpense {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.badgeTransfer {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.iconBox {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.date {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.amount {
+    font-weight: 800;
+    font-size: 1rem;
+}
+
+.empty {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}

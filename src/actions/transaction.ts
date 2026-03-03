@@ -114,10 +114,22 @@ export async function addTransaction(formData: FormData) {
     }
 }
 
+import { calculateConsolidatedNetWorth } from '../lib/finances';
+
 // 2. Traer info del Dashboard (Aislado por Workspace)
 export async function getDashboardData() {
     const user = await getSession();
     const wsId = user.activeWorkspaceId!;
+
+    const {
+        totalBalanceArs,
+        totalBalanceUsd,
+        totalInvestmentsArs,
+        totalInvestmentsUsd,
+        netWorthArs,
+        investmentDetails,
+        exchangeRate: EXCHANGE_RATE
+    } = await calculateConsolidatedNetWorth(wsId);
 
     const transactions = await prisma.transaction.findMany({
         where: { workspaceId: wsId },
@@ -128,50 +140,62 @@ export async function getDashboardData() {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // Todas las transacciones del mes para calcular el saldo inicial
     const monthTransactions = await prisma.transaction.findMany({
-        where: {
-            workspaceId: wsId,
-            date: { gte: startOfMonth }
-        }
+        where: { workspaceId: wsId, date: { gte: startOfMonth } }
     });
 
-    const accounts = await prisma.account.findMany({ where: { workspaceId: wsId } });
-
-    const totalBalanceArs = accounts
-        .filter(account => account.currency === 'ARS')
-        .reduce((sum, account) => sum + account.balance, 0);
-
-    const totalBalanceUsd = accounts
-        .filter(account => account.currency === 'USD')
-        .reduce((sum, account) => sum + account.balance, 0);
-
-    // Calcular diferencia neta del mes para revertir al saldo inicial
-    let monthDiffArs = 0;
-    let monthDiffUsd = 0;
+    // Calcular estadísticas del mes
+    let totalIncomeArs = 0;
+    let totalExpenseArs = 0;
+    let totalIncomeUsd = 0;
+    let totalExpenseUsd = 0;
+    const expensesByCategory: Record<string, number> = {};
 
     monthTransactions.forEach(t => {
-        const amount = t.amount;
+        const val = t.currency === 'USD' ? t.amount * EXCHANGE_RATE : t.amount;
         if (t.type === 'INCOME') {
-            if (t.currency === 'USD') monthDiffUsd += amount;
-            else monthDiffArs += amount;
+            totalIncomeArs += val;
+            if (t.currency === 'USD') totalIncomeUsd += t.amount;
         } else if (t.type === 'EXPENSE') {
-            if (t.currency === 'USD') monthDiffUsd -= amount;
-            else monthDiffArs -= amount;
+            totalExpenseArs += val;
+            const cat = t.category || "General";
+            expensesByCategory[cat] = (expensesByCategory[cat] || 0) + val;
+            if (t.currency === 'USD') totalExpenseUsd += t.amount;
         }
-        // Las transferencias no afectan el patrimonio neto total, así que se ignoran aquí
     });
 
-    const initialBalanceArs = totalBalanceArs - monthDiffArs;
-    const initialBalanceUsd = totalBalanceUsd - monthDiffUsd;
+    const savingsRate = totalIncomeArs > 0
+        ? Math.max(0, Math.round(((totalIncomeArs - totalExpenseArs) / totalIncomeArs) * 100))
+        : 0;
+
+    const initialBalanceArs = netWorthArs - (totalIncomeArs - totalExpenseArs);
+    const initialBalanceUsd = totalBalanceUsd - (totalIncomeUsd - totalExpenseUsd);
+
+    const accounts = await prisma.account.findMany({ where: { workspaceId: wsId } });
+    const investments = await prisma.investment.findMany({ where: { workspaceId: wsId } });
+    const recurring = await prisma.recurringTransaction.findMany({ where: { workspaceId: wsId, isActive: true } });
 
     return {
         transactions,
         totalBalanceArs,
         totalBalanceUsd,
+        totalInvestmentsArs,
+        totalInvestmentsUsd,
+        netWorthArs,
         initialBalanceArs,
         initialBalanceUsd,
+        totalIncomeArs,
+        totalExpenseArs,
+        totalIncomeUsd,
+        totalExpenseUsd,
+        savingsRate,
+        expensesByCategory,
         accounts,
+        investments: investmentDetails, // Alias
+        investmentDetails,
+        recurring,
+        EXCHANGE_RATE, // Alias for page.tsx compatibility
+        assetAllocation: (await calculateConsolidatedNetWorth(wsId)).assetAllocation,
         activeWorkspaceName: user.workspaces.find(w => w.workspaceId === wsId)?.workspace.name || 'Desconocido'
     };
 }

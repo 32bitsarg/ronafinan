@@ -1,61 +1,115 @@
 'use client';
 
-import { TrendingUp, TrendingDown, Paperclip, ArrowRightLeft } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { TrendingUp, TrendingDown, Paperclip, ArrowRightLeft, ChevronDown } from 'lucide-react';
 import TransactionItemActions from './TransactionItemActions';
 import ReceiptViewer from './ReceiptViewer';
 import { formatMoney } from '@/lib/formatters';
+import styles from './DesktopTransactionList.module.css';
 
 export default function DesktopTransactionList({ transactions }: { transactions: any[] }) {
+    const [expandedId, setExpandedId] = useState<string | null>(null);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    const toggleExpand = (id: string, e: React.MouseEvent) => {
+        // Prevent expansion if clicking on actions or receipt
+        if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('a')) return;
+        setExpandedId(expandedId === id ? null : id);
+    };
+
     if (!transactions || transactions.length === 0) {
         return (
-            <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-secondary)' }}>
+            <div className={styles.empty}>
+                <Paperclip size={48} opacity={0.2} />
                 <p>Aún no hay movimientos registrados.</p>
             </div>
         );
     }
 
-
     return (
-        <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                <thead>
-                    <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}>
-                        <th style={{ padding: '1rem', fontWeight: 500 }}>Tipo</th>
-                        <th style={{ padding: '1rem', fontWeight: 500 }}>Categoría</th>
-                        <th style={{ padding: '1rem', fontWeight: 500 }}>Descripción</th>
-                        <th style={{ padding: '1rem', fontWeight: 500 }}>Fecha</th>
-                        <th style={{ padding: '1rem', fontWeight: 500, textAlign: 'right' }}>Monto</th>
-                        <th style={{ padding: '1rem', fontWeight: 500, textAlign: 'center' }}>Acciones</th>
+        <div className={styles.wrapper}>
+            <table className={styles.table}>
+                <thead className={styles.thead}>
+                    <tr>
+                        <th style={{ paddingLeft: '1rem' }}>Descripción</th>
+                        <th>Fecha y Hora</th>
+                        <th>Estado</th>
+                        <th style={{ textAlign: 'right', paddingRight: '1rem' }}>Monto</th>
+                        <th style={{ width: '40px' }}></th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody className={styles.tbody}>
                     {transactions.map(t => {
                         const dateObj = new Date(t.date);
-                        const isIncome = t.type === 'INCOME';
+                        const isExpanded = expandedId === t.id;
+
+                        let badgeClass = styles.badge;
+                        let label = 'Egreso';
+
+                        if (t.type === 'INCOME') {
+                            badgeClass += ` ${styles.badgeIncome}`;
+                            label = 'Ingreso';
+                        } else if (t.type === 'TRANSFER') {
+                            badgeClass += ` ${styles.badgeTransfer}`;
+                            label = 'Transf.';
+                        } else {
+                            badgeClass += ` ${styles.badgeExpense}`;
+                        }
 
                         return (
-                            <tr key={t.id} style={{ borderBottom: '1px solid var(--border-subtle)', transition: 'background 0.2s' }}>
-                                <td style={{ padding: '1rem' }}>
-                                    <div style={{
-                                        display: 'inline-flex',
-                                        padding: '8px',
-                                        borderRadius: '50%',
-                                        backgroundColor: t.type === 'INCOME' ? 'rgba(16, 185, 129, 0.1)' : (t.type === 'TRANSFER' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(239, 68, 68, 0.1)'),
-                                        color: t.type === 'INCOME' ? 'var(--success)' : (t.type === 'TRANSFER' ? '#3b82f6' : 'var(--error)')
-                                    }}>
-                                        {t.type === 'INCOME' ? <TrendingUp size={18} /> : (t.type === 'TRANSFER' ? <ArrowRightLeft size={18} /> : <TrendingDown size={18} />)}
+                            <tr
+                                key={t.id}
+                                className={`${styles.row} ${isExpanded ? styles.expandedRow : ''}`}
+                                onClick={(e) => toggleExpand(t.id, e)}
+                            >
+                                <td style={{ paddingLeft: '1rem' }}>
+                                    <div className={styles.infoColumn}>
+                                        <div className={`${styles.iconBox} ${t.type === 'INCOME' ? styles.badgeIncome : (t.type === 'TRANSFER' ? styles.badgeTransfer : styles.badgeExpense)}`}>
+                                            {t.type === 'INCOME' ? <TrendingUp size={20} /> : (t.type === 'TRANSFER' ? <ArrowRightLeft size={20} /> : <TrendingDown size={20} />)}
+                                        </div>
+                                        <div className={styles.textContainer}>
+                                            <p className={`${styles.title} ${isExpanded ? styles.fullText : ''}`}>{t.description || t.category}</p>
+                                            <p className={`${styles.subtitle} ${isExpanded ? styles.fullText : ''}`}>{t.category}</p>
+
+                                            {isExpanded && t.description && (
+                                                <div className={styles.expandedContent}>
+                                                    <p><strong>Nota:</strong> {t.description}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                        {t.receiptUrl && <ReceiptViewer url={t.receiptUrl} transactionId={t.id} />}
                                     </div>
                                 </td>
-                                <td style={{ padding: '1rem', fontWeight: 500, maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.category}</td>
-                                <td style={{ padding: '1rem', color: 'var(--text-secondary)', maxWidth: '250px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                    {t.description || '-'}
-                                    {t.receiptUrl && <ReceiptViewer url={t.receiptUrl} transactionId={t.id} />}
+                                <td className={styles.date}>
+                                    {mounted ? (
+                                        <>
+                                            {dateObj.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' })} · {dateObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                                        </>
+                                    ) : (
+                                        <span style={{ opacity: 0 }}>Cargando...</span>
+                                    )}
                                 </td>
-                                <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{dateObj.toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                                <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold', color: t.type === 'INCOME' ? 'var(--success)' : (t.type === 'TRANSFER' ? '#3b82f6' : 'var(--text-primary)') }}>
+                                <td>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <span className={badgeClass}>{label}</span>
+                                        <ChevronDown size={14} style={{ transform: isExpanded ? 'rotate(180deg)' : 'none', opacity: 0.3, transition: 'transform 0.2s' }} />
+                                    </div>
+                                </td>
+                                <td
+                                    className={styles.amount}
+                                    style={{
+                                        textAlign: 'right',
+                                        paddingRight: '0.5rem',
+                                        color: t.type === 'INCOME' ? '#10b981' : (t.type === 'TRANSFER' ? '#3b82f6' : '#ef4444')
+                                    }}
+                                >
                                     {t.type === 'INCOME' ? '+' : (t.type === 'TRANSFER' ? '' : '-')}{formatMoney(t.amount, t.currency)}
                                 </td>
-                                <td style={{ padding: '1rem', textAlign: 'center' }}>
+                                <td onClick={(e) => e.stopPropagation()}>
                                     <TransactionItemActions transactionId={t.id} />
                                 </td>
                             </tr>
